@@ -1,20 +1,28 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      colors: {
+        "brown-100": "#ADACA3",
+        "brown-200": "#D7CDB9",
+        "brown-300": "#3A3328",
+        "brown-400": "#22201C",
+        "brown-500": "#1C1A17",
+      },
+      fontFamily: {
+        "causten-bold": ["Causten-Bold"],
+        "causten-semibold": ["Causten-Semibold"],
+        "causten-medium": ["Causten-Medium"],
+        "causten-regular": ["Causten-Regular"],
       },
     },
   },
   plugins: [],
-}
-export default config
+};
+export default config;

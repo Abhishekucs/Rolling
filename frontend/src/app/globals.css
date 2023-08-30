@@ -2,26 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@font-face {
+  font-family: "Causten-Medium";
+  src: url("../../public/fonts/Causten-Medium.otf");
+}
+@font-face {
+  font-family: "Causten-Bold";
+  src: url("../../public/fonts/Causten-Bold.otf");
+}
+@font-face {
+  font-family: "Causten-Semibold";
+  src: url("../../public/fonts/Causten-SemiBold.otf");
+}
+@font-face {
+  font-family: "Causten-Regular";
+  src: url("../../public/fonts/Causten-Regular.otf");
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+:root {
+  --rolling-brown-100: 173, 172, 163;
+  --rolling-brown-200: 215, 205, 185;
+  --rolling-brown-300: 58, 51, 40;
+  --rolling-brown-400: 34, 32, 28;
+  --rolling-brown-500: 28, 26, 23;
+  --rolling-brown-200-60: 215, 205, 185, 0.6;
+  --rolling-brown-200-50: 215, 205, 185, 0.5;
+  --rolling-brown-300-60: 58, 51, 40, 0.6;
+  --rolling-brown-300-50: 58, 51, 40, 0.5;
+  --rolling-brown-300-10: 58, 51, 40, 0.1;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: rgb(var(--rolling-brown-500));
+  box-sizing: border-box;
 }
