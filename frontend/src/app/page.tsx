@@ -5,23 +5,23 @@ import LongButton from "../components/long-button";
 
 export default function Home() {
   return (
-    <main className="min-h-screen w-screen">
-      <section className="parent h-screen w-screen lg:flex">
-        <div className="child h-full lg:basis-2/5 bg-brown-100">
-          <div className="child h-full mx-6 flex flex-col justify-center md:mx-24 lg:mx-24">
+    <main className="">
+      <section className="h-screen w-screen lg:flex">
+        <div className="h-full px-6 lg:basis-2/5 bg-brown-100">
+          <div className=" h-full max-w-md flex flex-col justify-center mx-auto">
             <div className=" flex flex-col ">
-              <span className="font-causten-bold text-lg lg:text-3xl">
+              <h2 className="font-causten-bold mb-10 text-2xl lg:text-3xl">
                 Sign up to Rolling
-              </span>
+              </h2>
               <LongButton
                 text="Sign up with Google"
                 logoSrc={GoogleLogo}
                 backgroundColor="bg-brown-500"
               />
-              <div className="flex items-center justify-center">
-                <div className="grow bg-brown-500 h-px"></div>
+              <div className="flex items-center justify-center my-8">
+                <div className="grow bg-brown-400 h-px"></div>
                 <span className="font-causten-medium text-lg mx-2">or</span>
-                <div className="grow bg-brown-500 h-px"></div>
+                <div className="grow bg-brown-400 h-px"></div>
               </div>
               <LongButton
                 text="Continue with email"
