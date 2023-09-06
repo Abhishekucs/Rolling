@@ -1,5 +1,6 @@
 "use client";
 import LongButton from "@/components/long-button";
+import { signUp } from "@/utils/auth";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
@@ -24,7 +25,12 @@ export default function SignupForm() {
 
   const { errors } = formState;
 
-  const onSubmit = (data: FormValues) => console.log(data);
+  const onSubmit = async (data: FormValues) => {
+    // start the loader
+    await signUp({ email: data.email, password: data.password });
+
+    // end the loader and push new route
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-6 group w-full relative z-0">

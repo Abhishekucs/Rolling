@@ -1,12 +1,17 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "license": "GPL-3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
+  },
+  "engines": {
+    "node": "19.6.1",
+    "npm": "9.8.1"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.5",

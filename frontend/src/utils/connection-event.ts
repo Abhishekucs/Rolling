@@ -1,6 +1,6 @@
 import { setOnlineStatus } from "@/redux/actions/connection-action";
 import { Dispatch } from "@reduxjs/toolkit";
-import { useAppSelector } from "./hooks";
+import store from "@/utils/store";
 
 export function connectionListener(dispatch: Dispatch) {
   const handleOnlineStatusChange = () => {
@@ -16,6 +16,10 @@ export function connectionListener(dispatch: Dispatch) {
   };
 }
 
-export function getConnectionStatus(): boolean | null {
-  return useAppSelector((state) => state.connection.isOnline);
+export function getInternetStatus(): boolean {
+  const data = store.getState().connection.isOnline;
+  if (data == null || !data) {
+    return false;
+  }
+  return true;
 }
