@@ -1,6 +1,6 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
 import { getAuth, Auth as AuthType } from "firebase/auth";
-import { firebaseConfig } from "./constants/firebase-config";
+import { firebaseConfig } from "../constants/firebase-config";
 
 // Initialize Firebase
 export let app: FirebaseApp | undefined;

@@ -12,12 +12,7 @@ interface FormValues {
 }
 
 export default function SignupForm() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const { register, handleSubmit, watch, formState } = useForm<FormValues>({
     defaultValues: {
       username: "",
       email: "",
@@ -26,6 +21,8 @@ export default function SignupForm() {
       terms: false,
     },
   });
+
+  const { errors } = formState;
 
   const onSubmit = (data: FormValues) => console.log(data);
   return (
