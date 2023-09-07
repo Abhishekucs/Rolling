@@ -17,7 +17,7 @@ const statuses: Statuses = {
 };
 
 const CUSTOM_STATUS_CODES = new Set(
-  _.map(statuses, (status: Status) => status.code)
+  _.map(statuses, (status: Status) => status.code),
 );
 
 export function isCustomCode(code: number): boolean {

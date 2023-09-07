@@ -1,0 +1,74 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:json/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "plugins": ["json", "@typescript-eslint"],
+  "ignorePatterns": [
+    "backend/__tests__/**/*",
+    "backend/setup-tests.ts",
+    "backend/jest.config.ts"
+  ],
+  "rules": {
+    "json/*": ["error"],
+    "indent": ["off"],
+    "linebreak-style": ["error", "unix"],
+    "curly": ["error", "multi-line"],
+    "semi": ["error", "always"],
+    "no-empty": ["error", { "allowEmptyCatch": true }],
+    "no-var": 2,
+    "quotes": [
+      "error",
+      "double",
+      { "allowTemplateLiterals": true, "avoidEscape": true }
+    ],
+    "no-duplicate-imports": ["error"],
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-var-requires": "off"
+  },
+  "overrides": [
+    {
+      // enable the rule specifically for TypeScript files
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "@typescript-eslint/explicit-function-return-type": ["error"],
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-empty-function": "error",
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          { "argsIgnorePattern": "^(_|e|event)", "varsIgnorePattern": "^_" }
+        ],
+        "@typescript-eslint/no-var-requires": "error",
+        "@typescript-eslint/no-this-alias": "off",
+        "@typescript-eslint/no-misused-promises": [
+          "error",
+          {
+            "checksVoidReturn": false
+          }
+        ],
+        "@typescript-eslint/promise-function-async": "warn"
+        //"@typescript-eslint/no-unnecessary-condition": "error"
+      },
+      "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module",
+        "project": "**/tsconfig.json"
+      }
+    },
+    {
+      "files": ["backend/**/*.ts"],
+      "rules": {
+        "eqeqeq": "error"
+      }
+    }
+  ]
+}

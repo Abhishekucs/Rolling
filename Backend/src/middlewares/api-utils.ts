@@ -9,14 +9,14 @@ import RollingError from "../utils/error";
 
 type AsyncHandler = (
   req: RollingTypes.Request,
-  res?: Response
+  res?: Response,
 ) => Promise<RollingResponse>;
 
 function asyncHandler(handler: AsyncHandler): RequestHandler {
   return async (
     req: RollingTypes.Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
       const handlerData = await handler(req, res);
@@ -50,7 +50,7 @@ function validateRequest(validationSchema: ValidationSchema): RequestHandler {
   const { validationErrorMessage } = validationSchema;
   const normalizedValidationSchema: ValidationSchema = _.omit(
     validationSchema,
-    "validationErrorMessage"
+    "validationErrorMessage",
   );
 
   return (req: RollingTypes.Request, _res: Response, next: NextFunction) => {
@@ -65,10 +65,10 @@ function validateRequest(validationSchema: ValidationSchema): RequestHandler {
           throw new RollingError(
             422,
             validationErrorMessage ??
-              `${errorMessage} (${error.details[0]?.context?.value})`
+              `${errorMessage} (${error.details[0]?.context?.value})`,
           );
         }
-      }
+      },
     );
 
     next();

@@ -1,4 +1,5 @@
 declare namespace RollingTypes {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   type EndpointResponse<Data = any> = Promise<HttpClientResponse<Data>>;
 
   interface HttpClientResponse<Data> {
@@ -15,7 +16,7 @@ declare namespace RollingTypes {
 
   type HttpClientMethod = (
     endpoint: string,
-    config?: RequestOptions
+    config?: RequestOptions,
   ) => Promise<HttpClientResponse>;
 
   interface HttpClient {

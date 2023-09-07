@@ -7,7 +7,7 @@ export function inRange(value: number, min: number, max: number): boolean {
   return value >= min && value <= max;
 }
 
-const VALID_NAME_PATTERN = /^[a-zA-Z\. ]+$/;
+const VALID_NAME_PATTERN = /^[a-zA-Z]+$/;
 const PINCODE_PATTERN = /^[1-9][0-9]{5}$/;
 const INDIAN_MOBILE_NUMBER = /^[6-9]\d{9}$/;
 
@@ -24,7 +24,7 @@ export function isUsernameValid(name: string): boolean {
   }
 
   const isProfanity = profanities.find((profanity) =>
-    normalizedName.includes(profanity)
+    normalizedName.includes(profanity),
   );
   if (isProfanity) {
     return false;

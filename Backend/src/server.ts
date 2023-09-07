@@ -32,7 +32,7 @@ async function bootserver(port: number): Promise<Server> {
       Logger.success(
         `Queues initialized: ${queues
           .map((queue) => queue.queueName)
-          .join(", ")}`
+          .join(", ")}`,
       );
 
       Logger.info("Initializing workers...");
@@ -42,7 +42,7 @@ async function bootserver(port: number): Promise<Server> {
       Logger.success(
         `Workers initialized: ${workers
           .map((worker) => worker(connection).name)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
   } catch (error) {

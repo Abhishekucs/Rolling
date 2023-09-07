@@ -1,0 +1,45 @@
+{
+  "name": "rolling",
+  "version": "1.0.0",
+  "scripts": {
+    "prepare": "husky install",
+    "pre-commit": "lint-staged",
+    "lint": "npm run lint-be && npm run lint-fe",
+    "lint-be": "eslint \"./backend/**/*.ts\"",
+    "lint-fe": "eslint \"./frontend/**/*.{ts,tsx,js,jsx}\"",
+    "dev": "concurrently --kill-others \"npm run dev-fe\" \"npm run dev-be\"",
+    "dev-be": "cd backend && npm run dev",
+    "dev-fe": "cd frontend && npm run dev",
+    "pretty": "prettier --check \"./backend/**/*.{ts,json,js,css,html}\" \"./frontend/**/*.{ts,js,css,scss}\"",
+    "pretty-code": "prettier --check \"./backend/**/*.{ts,js,json,css,html}\" \"./frontend/**/*.{ts,js}\" \"./frontend/src/**/*.css\"",
+    "pretty-code-be": "prettier --check \"./backend/**/*.{ts,js,json,css,html}\"",
+    "pretty-code-fe": "prettier --check \"./frontend/**/*.{ts,js}\" \"./frontend/src/**/*.css\"",
+    "pretty-fix": "prettier --write \"./backend/**/*.{ts,json,js,css,html}\" \"./frontend/**/*.{ts,js,css,scss}\""
+  },
+  "private": true,
+  "engines": {
+    "node": "19.6.1",
+    "npm": "9.8.1"
+  },
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
+    "concurrently": "^8.2.1",
+    "eslint": "^8.48.0",
+    "eslint-plugin-json": "^3.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
+    "prettier": "3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "lint-staged": {
+    "*.{json,scss,css,html}": [
+      "prettier --write"
+    ],
+    "*.{ts,js,tsx,jsx}": [
+      "prettier --write",
+      "eslint"
+    ]
+  }
+}

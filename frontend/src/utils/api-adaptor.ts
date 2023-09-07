@@ -4,17 +4,17 @@ import { getIdToken } from "firebase/auth";
 
 type AxiosClientMethod = (
   endpoint: string,
-  config: AxiosRequestConfig
+  config: AxiosRequestConfig,
 ) => Promise<AxiosResponse>;
 
 type AxiosClientDataMethod = (
   endpoint: string,
   data: unknown,
-  config: AxiosRequestConfig
+  config: AxiosRequestConfig,
 ) => Promise<AxiosResponse>;
 
 async function adaptRequestOptions(
-  options: RollingTypes.RequestOptions
+  options: RollingTypes.RequestOptions,
 ): Promise<AxiosRequestConfig> {
   const currentUser = Auth?.currentUser;
   const idToken = currentUser && (await getIdToken(currentUser));
@@ -34,30 +34,29 @@ async function adaptRequestOptions(
 
 function rollingClientMethod(
   clientMethod: AxiosClientMethod | AxiosClientDataMethod,
-  methodType: RollingTypes.HttpMethodTypes
+  methodType: RollingTypes.HttpMethodTypes,
 ): RollingTypes.HttpClientMethod {
   return async (
     endpoint: string,
-    options: RollingTypes.RequestOptions = {}
+    options: RollingTypes.RequestOptions = {},
   ): RollingTypes.EndpointResponse => {
     let errorMessage = "";
 
     try {
-      const requestOptions: AxiosRequestConfig = await adaptRequestOptions(
-        options
-      );
+      const requestOptions: AxiosRequestConfig =
+        await adaptRequestOptions(options);
 
       let response;
       if (methodType === "get" || methodType === "delete") {
         response = await (clientMethod as AxiosClientMethod)(
           endpoint,
-          requestOptions
+          requestOptions,
         );
       } else {
         response = await (clientMethod as AxiosClientDataMethod)(
           endpoint,
           requestOptions.data,
-          requestOptions
+          requestOptions,
         );
       }
 
@@ -93,7 +92,7 @@ function rollingClientMethod(
 
 export function buildHttpClient(
   baseURL: string,
-  timeout: number
+  timeout: number,
 ): RollingTypes.HttpClient {
   const axiosClient = axios.create({
     baseURL,

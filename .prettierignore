@@ -1,0 +1,4 @@
+node_modules
+backend/build
+backend/logs
+frontend/.next

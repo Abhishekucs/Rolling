@@ -1,4 +1,4 @@
-import { Handler, NextFunction, Request, Response } from "express";
+import { Handler, NextFunction, Response } from "express";
 import RollingError from "../utils/error";
 import { verifyIdToken } from "../utils/auth";
 
@@ -21,7 +21,7 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
   return async (
     req: RollingTypes.Request,
     _res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> => {
     let token: RollingTypes.DecodedToken;
 
@@ -42,7 +42,7 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
         throw new RollingError(
           401,
           "Unauthorized",
-          `endpoint: ${req.baseUrl} no authorization header found`
+          `endpoint: ${req.baseUrl} no authorization header found`,
         );
       }
 
@@ -59,14 +59,14 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
 }
 
 function authenticateWithBody(
-  body: RollingTypes.Request["body"]
+  body: RollingTypes.Request["body"],
 ): RollingTypes.DecodedToken {
   const { uid, email } = body;
 
   if (!uid) {
     throw new RollingError(
       401,
-      "Running authorization in dev mode but still no uid was provided"
+      "Running authorization in dev mode but still no uid was provided",
     );
   }
 
@@ -79,7 +79,7 @@ function authenticateWithBody(
 
 async function authenticateWithAuthHeader(
   authHeader: string,
-  options: RequestAuthenticationOptions
+  options: RequestAuthenticationOptions,
 ): Promise<RollingTypes.DecodedToken> {
   const [authScheme, token] = authHeader.split(" ");
   const normalizedAuthScheme = authScheme.trim();
@@ -91,18 +91,18 @@ async function authenticateWithAuthHeader(
   throw new RollingError(
     401,
     "Unknown authentication scheme",
-    `The authentication scheme "${authScheme}" is not implemented`
+    `The authentication scheme "${authScheme}" is not implemented`,
   );
 }
 
 async function authenticateWithBearerToken(
   token: string,
-  options: RequestAuthenticationOptions
+  options: RequestAuthenticationOptions,
 ): Promise<RollingTypes.DecodedToken> {
   try {
     const decodedToken = await verifyIdToken(
       token,
-      options.requireFreshToken // options.requireFreshToken || options.noCache cache need to be implemented here
+      //options.requireFreshToken // options.requireFreshToken || options.noCache cache need to be implemented here
     );
 
     if (options.requireFreshToken) {
@@ -113,7 +113,7 @@ async function authenticateWithBearerToken(
         throw new RollingError(
           401,
           "Unauthorized",
-          `This endpoint requires a fresh token`
+          `This endpoint requires a fresh token`,
         );
       }
     }
@@ -130,25 +130,25 @@ async function authenticateWithBearerToken(
       throw new RollingError(
         401,
         "Token expired - please login again",
-        "authenticateWithBearerToken"
+        "authenticateWithBearerToken",
       );
     } else if (errorCode?.includes("auth/id-token-revoked")) {
       throw new RollingError(
         401,
         "Token revoked - please login again",
-        "authenticateWithBearerToken"
+        "authenticateWithBearerToken",
       );
     } else if (errorCode?.includes("auth/user-not-found")) {
       throw new RollingError(
         404,
         "User not found",
-        "authenticateWithBearerToken"
+        "authenticateWithBearerToken",
       );
     } else if (errorCode?.includes("auth/argument-error")) {
       throw new RollingError(
         400,
         "Incorrect Bearer token format",
-        "authenticateWithBearerToken"
+        "authenticateWithBearerToken",
       );
     } else {
       throw error;

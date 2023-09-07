@@ -1,5 +1,7 @@
 import Users from "./users";
 
-export default {
+const endpoints = {
   Users,
 };
+
+export default endpoints;

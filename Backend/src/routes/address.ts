@@ -75,7 +75,7 @@ const addressIdValidation = Joi.string()
 router.get(
   "/",
   authenticateRequest(),
-  asyncHandler(AddressController.getAllAddress)
+  asyncHandler(AddressController.getAllAddress),
 );
 
 router.post(
@@ -95,7 +95,7 @@ router.post(
       mobileNumber: mobileNumberValidation,
     },
   }),
-  asyncHandler(AddressController.createNewAddress)
+  asyncHandler(AddressController.createNewAddress),
 );
 
 router.patch(
@@ -118,7 +118,7 @@ router.patch(
       id: addressIdValidation,
     },
   }),
-  asyncHandler(AddressController.updateAddress)
+  asyncHandler(AddressController.updateAddress),
 );
 
 export default router;

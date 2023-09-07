@@ -10,13 +10,13 @@ const infoColor = chalk.white;
 const logFolderPath = process.env.LOG_FOLDER_PATH ?? "./logs";
 const maxLogSize = parseInt(process.env.LOG_FILE_MAX_SIZE ?? "10485760");
 
-interface Log {
-  type?: string;
-  timestamp: number;
-  uid: string;
-  event: string;
-  message: string;
-}
+// interface Log {
+//   type?: string;
+//   timestamp: number;
+//   uid: string;
+//   event: string;
+//   message: string;
+// }
 
 const customLevels = {
   error: 0,

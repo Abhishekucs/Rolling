@@ -23,7 +23,7 @@ export default function LongButton({
   borderWidth?: string;
   type?: ButtonType;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}) {
+}): JSX.Element {
   return (
     <button
       type={type}

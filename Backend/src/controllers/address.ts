@@ -4,22 +4,17 @@ import * as AddressDAL from "../dal/address";
 import _ from "lodash";
 
 export async function getAllAddress(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
-  let Addresses: Array<RollingTypes.Address>;
 
-  try {
-    Addresses = await AddressDAL.getAllAddress(uid, "getAllAddress");
-  } catch (error) {
-    throw error;
-  }
+  const Addresses = await AddressDAL.getAllAddress(uid, "getAllAddress");
 
   return new RollingResponse("addresses retrived", Addresses);
 }
 
 export async function createNewAddress(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
   const {
@@ -41,7 +36,7 @@ export async function createNewAddress(
     const allAddress = await AddressDAL.getAllAddress(uid, "createNewAddress");
     if (defaultAddress) {
       _.forEach(allAddress, async (address) => {
-        let updatedAddress: RollingTypes.Address = {
+        const updatedAddress: RollingTypes.Address = {
           ...address,
           defaultAddress: false,
         };
@@ -85,7 +80,7 @@ export async function createNewAddress(
 }
 
 export async function updateAddress(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
   const {
@@ -106,8 +101,8 @@ export async function updateAddress(
     const allAddress = await AddressDAL.getAllAddress(uid, "createNewAddress");
 
     _.forEach(allAddress, async (address) => {
-      if (address.addressId != addressId) {
-        let updatedAddress: RollingTypes.Address = {
+      if (address.addressId !== addressId) {
+        const updatedAddress: RollingTypes.Address = {
           ...address,
           defaultAddress: false,
         };
@@ -116,7 +111,7 @@ export async function updateAddress(
     });
   }
 
-  let newUpdatedAddress: RollingTypes.Address = {
+  const newUpdatedAddress: RollingTypes.Address = {
     addressId,
     name,
     address1,

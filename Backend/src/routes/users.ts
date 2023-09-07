@@ -39,7 +39,7 @@ router.post(
       name: nameValidation,
     },
   }),
-  asyncHandler(UserController.createNewUser)
+  asyncHandler(UserController.createNewUser),
 );
 
 router.patch(
@@ -52,13 +52,13 @@ router.patch(
       name: nameValidation,
     },
   }),
-  asyncHandler(UserController.updateUserName)
+  asyncHandler(UserController.updateUserName),
 );
 
 router.get(
   "/verificationEmail",
   authenticateRequest(),
-  asyncHandler(UserController.sendVerificationEmail)
+  asyncHandler(UserController.sendVerificationEmail),
 );
 
 router.post(
@@ -68,7 +68,7 @@ router.post(
       email: Joi.string().email().required(),
     },
   }),
-  asyncHandler(UserController.sendForgotPasswordEmail)
+  asyncHandler(UserController.sendForgotPasswordEmail),
 );
 
 router.delete(
@@ -76,7 +76,7 @@ router.delete(
   authenticateRequest({
     requireFreshToken: true,
   }),
-  asyncHandler(UserController.deleteUser)
+  asyncHandler(UserController.deleteUser),
 );
 
 export default router;

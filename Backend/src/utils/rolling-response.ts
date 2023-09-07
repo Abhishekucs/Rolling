@@ -3,9 +3,11 @@ import { isCustomCode } from "../constants/rolling-status-code";
 
 export class RollingResponse {
   message: string;
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   data: any;
   status: number;
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   constructor(message?: string, data?: any, status = 200) {
     this.message = message ?? "ok";
     this.data = data ?? null;
@@ -15,7 +17,7 @@ export class RollingResponse {
 
 export function handleRollingResponse(
   rollingResponse: RollingResponse,
-  res: Response
+  res: Response,
 ): void {
   const { message, data, status } = rollingResponse;
 

@@ -1,15 +1,12 @@
 "use client";
 
 import { setOnlineStatus } from "@/redux/actions/connection-action";
-import {
-  connectionListener,
-  getConnectionStatus,
-} from "@/utils/connection-event";
-import { useAppDispatch } from "@/utils/hooks";
+import { connectionListener } from "@/utils/connection-event";
+import { useAppDispatch, useAppSelector } from "@/utils/hooks";
 import { useEffect } from "react";
 
-export default function Banner() {
-  const isOnline = getConnectionStatus();
+export default function Banner(): JSX.Element {
+  const isOnline = useAppSelector((state) => state.connection.isOnline);
   const dispatch = useAppDispatch();
   useEffect(() => {
     const initialStatus = navigator.onLine;

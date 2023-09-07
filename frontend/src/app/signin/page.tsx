@@ -1,3 +1,3 @@
-export default function Signin() {
+export default function Signin(): JSX.Element {
   return <>SignIN</>;
 }

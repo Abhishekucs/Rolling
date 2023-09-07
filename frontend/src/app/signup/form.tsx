@@ -12,7 +12,7 @@ interface FormValues {
   terms: boolean;
 }
 
-export default function SignupForm() {
+export default function SignupForm(): JSX.Element {
   const { register, handleSubmit, watch, formState } = useForm<FormValues>({
     defaultValues: {
       username: "",
@@ -25,7 +25,7 @@ export default function SignupForm() {
 
   const { errors } = formState;
 
-  const onSubmit = async (data: FormValues) => {
+  async function onSubmit(data: FormValues): Promise<void> {
     // start the loader
     await signUp({
       name: data.username,
@@ -34,7 +34,7 @@ export default function SignupForm() {
     });
 
     // end the loader and push new route
-  };
+  }
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-6 group w-full relative z-0">
@@ -52,7 +52,7 @@ export default function SignupForm() {
               message: "Name Required",
             },
             pattern: {
-              value: /^[a-zA-Z\. ]+$/,
+              value: /^[a-zA-Z]+$/,
               message: "Invalid Name",
             },
           })}
@@ -80,7 +80,8 @@ export default function SignupForm() {
               message: "Email Required",
             },
             pattern: {
-              value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+              value:
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
               message: "Invalid Email Address",
             },
           })}
@@ -169,7 +170,7 @@ export default function SignupForm() {
           htmlFor="terms"
           className="ml-2 text-sm font-causten-medium text-brown-500"
         >
-          I agree with Rolling's{" "}
+          I agree with Rolling&aposs{" "}
           <Link href="#" className="text-brown-500 underline">
             Terms of Service
           </Link>

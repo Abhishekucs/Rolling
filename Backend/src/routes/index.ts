@@ -24,7 +24,7 @@ function addApiRoutes(app: Application): void {
         uptime: Date.now() - APP_START_TIME,
         version: "1.0.0",
       });
-    })
+    }),
   );
 
   _.each(API_ROUTE_MAP, (router: Router, route) => {
@@ -37,9 +37,9 @@ function addApiRoutes(app: Application): void {
       return new RollingResponse(
         `Unknown request URL (${req.method}: ${req.path})`,
         null,
-        404
+        404,
       );
-    })
+    }),
   );
 }
 

@@ -1,27 +1,25 @@
-import fs from "fs";
 import _ from "lodash";
-import { join } from "path";
 import * as IORedis from "ioredis";
 import Logger from "../utils/logger";
 
 let connection: IORedis.Redis;
 let connected = false;
 
-const REDIS_SCRIPTS_DIRECTORY_PATH = join(__dirname, "../../redis-scripts");
+//const REDIS_SCRIPTS_DIRECTORY_PATH = join(__dirname, "../../redis-scripts");
 
-function loadScripts(client: IORedis.Redis): void {
-  const scriptFiles = fs.readdirSync(REDIS_SCRIPTS_DIRECTORY_PATH);
+// function loadScripts(client: IORedis.Redis): void {
+//   const scriptFiles = fs.readdirSync(REDIS_SCRIPTS_DIRECTORY_PATH);
 
-  scriptFiles.forEach((scriptFile) => {
-    const scriptPath = join(REDIS_SCRIPTS_DIRECTORY_PATH, scriptFile);
-    const scriptSource = fs.readFileSync(scriptPath, "utf-8");
-    const scriptName = _.camelCase(scriptFile.split(".")[0]);
+//   scriptFiles.forEach((scriptFile) => {
+//     const scriptPath = join(REDIS_SCRIPTS_DIRECTORY_PATH, scriptFile);
+//     const scriptSource = fs.readFileSync(scriptPath, "utf-8");
+//     const scriptName = _.camelCase(scriptFile.split(".")[0]);
 
-    client.defineCommand(scriptName, {
-      lua: scriptSource,
-    });
-  });
-}
+//     client.defineCommand(scriptName, {
+//       lua: scriptSource,
+//     });
+//   });
+// }
 
 export async function connect(): Promise<void> {
   if (connected) {
@@ -56,11 +54,11 @@ export async function connect(): Promise<void> {
     if (MODE === "dev") {
       await connection.quit();
       Logger.warning(
-        `Failed to connect to redis. Continuing in dev mode, running without redis.`
+        `Failed to connect to redis. Continuing in dev mode, running without redis.`,
       );
     } else {
       Logger.error(
-        "Failed to connect to redis. Exiting with exit status code 1."
+        "Failed to connect to redis. Exiting with exit status code 1.",
       );
       process.exit(1);
     }
@@ -71,11 +69,11 @@ export function isConnected(): boolean {
   return connected;
 }
 
-export function getConnection(): IORedis.Redis | undefined {
-  const status = connection?.status;
-  if (!connection || status !== "ready") {
-    return undefined;
-  }
+export function getConnection(): IORedis.Redis {
+  //   const status = connection?.status;
+  //   if (!connection || status !== "ready") {
+  //     return undefined;
+  //   }
 
   return connection;
 }

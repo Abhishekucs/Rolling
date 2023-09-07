@@ -8,7 +8,7 @@ import emailQueue from "../queues/email-queue";
 import { UserRecord } from "firebase-admin/lib/auth/user-record";
 
 export async function getUser(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
 
@@ -27,7 +27,7 @@ export async function getUser(
         404,
         "User not found in the database, but found in the auth system. We have deleted the ghost user from the auth system. Please sign up again.",
         "get user",
-        uid
+        uid,
       );
     } else {
       throw error;
@@ -42,7 +42,7 @@ export async function getUser(
 }
 
 export async function createNewUser(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { email, uid } = req.ctx.decodedToken;
   const { name } = req.body;
@@ -53,7 +53,7 @@ export async function createNewUser(
 }
 
 export async function updateUserName(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
   const { name } = req.body;
@@ -66,18 +66,18 @@ export async function updateUserName(
 }
 
 export async function deleteUser(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
 
-  const userInfo = await UserDAL.getUser(uid, "delete user");
+  await UserDAL.getUser(uid, "delete user");
   await Promise.all([deleteAllAddress(uid), UserDAL.deleteUser(uid)]);
 
   return new RollingResponse("User deleted");
 }
 
 export async function sendVerificationEmail(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { email, uid } = req.ctx.decodedToken;
   const isVerified = (
@@ -89,7 +89,7 @@ export async function sendVerificationEmail(
           500, // this should never happen, but it does. it mightve been caused by auth token cache, will see if disabling cache fixes it
           "Auth user not found, even though the token got decoded",
           JSON.stringify({ uid, email, stack: e.stack }),
-          uid
+          uid,
         );
       })
   ).emailVerified;
@@ -101,7 +101,7 @@ export async function sendVerificationEmail(
   if (userInfo.email !== email) {
     throw new RollingError(
       400,
-      "Authenticated email does not match the email found in the database. This might happen if you recently changed your email. Please refresh and try again."
+      "Authenticated email does not match the email found in the database. This might happen if you recently changed your email. Please refresh and try again.",
     );
   }
 
@@ -132,7 +132,7 @@ export async function sendVerificationEmail(
           userInfoEmail: userInfo.email,
           stack: e.stack,
         }),
-        userInfo.uid
+        userInfo.uid,
       );
     }
     throw e;
@@ -144,7 +144,7 @@ export async function sendVerificationEmail(
 }
 
 export async function sendForgotPasswordEmail(
-  req: RollingTypes.Request
+  req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { email } = req.body;
 
@@ -160,7 +160,7 @@ export async function sendForgotPasswordEmail(
 
   const userInfo = await UserDAL.getUser(
     auth.uid,
-    "request forgot password email"
+    "request forgot password email",
   );
 
   const link = await FirebaseAdmin()

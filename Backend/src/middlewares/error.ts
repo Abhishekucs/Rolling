@@ -11,7 +11,7 @@ async function errorHandlingMiddleware(
   error: Error,
   req: RollingTypes.Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): Promise<void> {
   try {
     const rollingError = error as RollingError;
@@ -51,9 +51,9 @@ async function errorHandlingMiddleware(
     new RollingResponse(
       "Something went really wrong, please contact support.",
       undefined,
-      500
+      500,
     ),
-    res
+    res,
   );
 }
 

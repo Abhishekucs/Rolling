@@ -10,14 +10,14 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 
 const SignupForm = dynamic(() => import("./form"), { ssr: false });
-export default function Signup() {
+export default function Signup(): JSX.Element {
   const [withEmail, setWithEmail] = useState(false);
 
-  function handleContinueWithEmail() {
+  function handleContinueWithEmail(): void {
     setWithEmail(true);
   }
 
-  function handleBackToEmail() {
+  function handleBackToEmail(): void {
     setWithEmail(false);
   }
 
@@ -56,7 +56,7 @@ export default function Signup() {
                   text="Sign up with Google"
                   logoSrc={GoogleLogo}
                   backgroundColor="bg-brown-500"
-                  onClick={() => console.log("Sign Up with Google")}
+                  onClick={(): void => console.log("Sign Up with Google")}
                 />
                 <div className="inline-flex items-center justify-center w-full relative">
                   <hr className=" w-full h-px my-7 bg-brown-400/20 border-0 " />

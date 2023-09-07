@@ -8,7 +8,7 @@ export function getUserCollection(): FirebaseFirestore.CollectionReference<Fireb
 
 export async function getUser(
   uid: string,
-  stack: string
+  stack: string,
 ): Promise<RollingTypes.User> {
   const userRef = getUserCollection();
   const userDoc = await userRef.doc(uid).get();
@@ -20,7 +20,7 @@ export async function getUser(
 export async function addUser(
   name: string,
   email: string,
-  uid: string
+  uid: string,
 ): Promise<void> {
   const newUserDoc: RollingTypes.User = {
     email,
@@ -36,7 +36,7 @@ export async function addUser(
 export async function updateUser(
   name: string,
   previousName: string,
-  uid: string
+  uid: string,
 ): Promise<void> {
   if (name.toLowerCase() === previousName.toLowerCase()) {
     throw new RollingError(400, "New name is same as the Old name");

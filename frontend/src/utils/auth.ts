@@ -1,10 +1,7 @@
 "use client";
 
 import { Auth } from "@/init/firebase";
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getInternetStatus } from "./connection-event";
 import Rolling from "@/init/api";
 
@@ -47,13 +44,13 @@ export async function signUp(data: SignupData): Promise<void> {
     createAuthUser = await createUserWithEmailAndPassword(
       Auth,
       data.email,
-      data.password
+      data.password,
     );
 
     const signupResponse = await Rolling.users.create(
       data.name,
       data.email,
-      createAuthUser.user.uid
+      createAuthUser.user.uid,
     );
 
     if (signupResponse.status !== 200) {
