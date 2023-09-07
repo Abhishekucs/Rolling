@@ -2,5 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 if [ $(git branch --no-color | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') = "main" ] && [ $(git remote get-url origin) = "https://github.com/Abhishekucs/Rolling" ]; then
-	npx --no -- commitlint --edit ${1}
+npx --no -- commitlint --edit ${1}
 fi
