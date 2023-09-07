@@ -36,6 +36,7 @@ router.post(
     body: {
       uid: Joi.string().token(),
       email: Joi.string().email(),
+      name: nameValidation,
     },
   }),
   asyncHandler(UserController.createNewUser)

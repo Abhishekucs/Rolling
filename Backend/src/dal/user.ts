@@ -17,11 +17,15 @@ export async function getUser(
   return userDoc.data() as RollingTypes.User;
 }
 
-export async function addUser(email: string, uid: string): Promise<void> {
+export async function addUser(
+  name: string,
+  email: string,
+  uid: string
+): Promise<void> {
   const newUserDoc: RollingTypes.User = {
     email,
     uid,
-    name: "",
+    name,
     addedAt: Date.now(),
     admin: false,
   };

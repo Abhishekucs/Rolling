@@ -6,10 +6,12 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { getInternetStatus } from "./connection-event";
+import Rolling from "@/init/api";
 
 interface SignupData {
   email: string;
   password: string;
+  name: string;
 }
 
 export async function signUp(data: SignupData): Promise<void> {
@@ -31,7 +33,17 @@ export async function signUp(data: SignupData): Promise<void> {
       data.password
     );
 
-    console.log(createAuthUser);
+    const signupResponse = await Rolling.users.create(
+      data.name,
+      data.email,
+      createAuthUser.user.uid
+    );
+
+    if (signupResponse.status !== 200) {
+      throw signupResponse;
+    }
+
+    console.log(signupResponse);
   } catch (e) {
     console.error(e);
   }

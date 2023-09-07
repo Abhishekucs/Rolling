@@ -27,7 +27,11 @@ export default function SignupForm() {
 
   const onSubmit = async (data: FormValues) => {
     // start the loader
-    await signUp({ email: data.email, password: data.password });
+    await signUp({
+      name: data.username,
+      email: data.email,
+      password: data.password,
+    });
 
     // end the loader and push new route
   };

@@ -7,8 +7,9 @@ import LongButton from "@/components/long-button";
 import Link from "next/link";
 import ChevronLeft from "../../../public/svgs/ChevronLeft.svg";
 import { useState } from "react";
-import SignupForm from "./form";
+import dynamic from "next/dynamic";
 
+const SignupForm = dynamic(() => import("./form"), { ssr: false });
 export default function Signup() {
   const [withEmail, setWithEmail] = useState(false);
 
@@ -33,7 +34,15 @@ export default function Signup() {
           >
             <button onClick={handleBackToEmail}>
               {" "}
-              <Image className="h-5" src={ChevronLeft} alt="chevronLeft" />{" "}
+              <Image
+                className="h-5"
+                src={ChevronLeft}
+                alt="chevronLeft"
+                style={{
+                  height: "auto",
+                  width: "auto",
+                }}
+              />{" "}
             </button>
           </div>
           <div className="max-w-sm mx-auto flex flex-col flex-grow justify-center">
@@ -99,10 +108,12 @@ export default function Signup() {
           <div className="w-full h-full">
             <Image
               src={BrownHoodie}
+              priority
               alt="BrownHoodie"
-              fill={true}
               style={{
                 objectFit: "cover",
+                width: "100%",
+                height: "100%",
               }}
             />
           </div>

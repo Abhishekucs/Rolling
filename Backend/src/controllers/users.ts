@@ -45,8 +45,9 @@ export async function createNewUser(
   req: RollingTypes.Request
 ): Promise<RollingResponse> {
   const { email, uid } = req.ctx.decodedToken;
+  const { name } = req.body;
 
-  await UserDAL.addUser(email, uid);
+  await UserDAL.addUser(name, email, uid);
 
   return new RollingResponse("User created");
 }
