@@ -6,6 +6,7 @@ import Logger from "./utils/logger";
 import * as RedisClient from "./init/redis";
 import queues from "./queues";
 import workers from "./workers";
+import * as EmailClient from "./init/email-client";
 
 async function bootserver(port: number): Promise<Server> {
   try {
@@ -13,6 +14,9 @@ async function bootserver(port: number): Promise<Server> {
 
     Logger.info("Initializing Firebase app instance...");
     initFirebaseAdmin();
+
+    Logger.info("Initializing email client...");
+    EmailClient.init();
 
     Logger.info("Connecting to redis...");
     await RedisClient.connect();

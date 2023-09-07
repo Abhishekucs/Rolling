@@ -13,11 +13,11 @@ interface EmailMetadata {
 
 const templates: Record<EmailType, EmailMetadata> = {
   verify: {
-    subject: "Verify your Monkeytype account",
+    subject: "Verify your Rolling account",
     templateName: "verification.html",
   },
   resetPassword: {
-    subject: "Reset your Monkeytype password",
+    subject: "Reset your Rolling password",
     templateName: "reset-password.html",
   },
 };
@@ -95,13 +95,13 @@ export async function sendEmail<M extends EmailType>(
   const template = await fillTemplate<typeof templateName>(templateName, data);
 
   const mailOptions = {
-    from: "Monkeytype <noreply@monkeytype.com>",
+    from: "Rolling <noreply@rollingcloth.in>",
     to,
     subject: templates[templateName].subject,
     html: template,
   };
 
-  let result;
+  let result: any;
   try {
     result = await transporter.sendMail(mailOptions);
   } catch (e) {
@@ -120,7 +120,7 @@ export async function sendEmail<M extends EmailType>(
   };
 }
 
-const EMAIL_TEMPLATES_DIRECTORY = join(__dirname, "../../email-templates");
+const EMAIL_TEMPLATES_DIRECTORY = join(__dirname, "../email-templates");
 
 const cachedTemplates: Record<string, string> = {};
 

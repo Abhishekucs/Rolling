@@ -14,6 +14,23 @@ interface SignupData {
   name: string;
 }
 
+export async function sendVerificationEmail(): Promise<void> {
+  if (Auth === undefined) {
+    console.error("Authentication Uninitialized");
+    return;
+  }
+
+  //Loader.show()
+  const result = await Rolling.users.verificationEmail();
+  if (result.status !== 200) {
+    //Loader.hide();
+    console.error("Failed to request verfication email");
+  } else {
+    //Loader.hide();
+    console.log("Verification email sent");
+  }
+}
+
 export async function signUp(data: SignupData): Promise<void> {
   if (Auth === undefined) {
     console.error("Authentication Uninitialized");
@@ -43,6 +60,7 @@ export async function signUp(data: SignupData): Promise<void> {
       throw signupResponse;
     }
 
+    await sendVerificationEmail();
     console.log(signupResponse);
   } catch (e) {
     console.error(e);
