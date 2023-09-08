@@ -3,6 +3,7 @@ import { Application, Router } from "express";
 import admin from "./admin";
 import users from "./users";
 import address from "./address";
+import product from "./product";
 import { RollingResponse } from "../utils/rolling-response";
 import { asyncHandler } from "../middlewares/api-utils";
 
@@ -14,6 +15,7 @@ const API_ROUTE_MAP = {
   "/admin": admin,
   "/user": users,
   "/address": address,
+  "/product": product,
 };
 
 function addApiRoutes(app: Application): void {

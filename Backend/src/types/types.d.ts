@@ -35,4 +35,39 @@ declare namespace RollingTypes {
     addedAt: number;
     admin?: boolean;
   }
+
+  type CategoryType = "tshirt" | "hoodie";
+  type ProductTag = "new" | "old";
+  type ProductPriceTag = "expensive" | "cheap";
+  type ProductSize = "xs" | "s" | "m" | "l" | "xl" | "xxl";
+
+  interface ProductImage {
+    src: string;
+    name: string;
+    imageId: string;
+  }
+
+  interface Product {
+    productId: string;
+    category: CategoryType;
+    name: string;
+    price: number;
+    tag: ProductTag;
+    priceTag: ProductPriceTag;
+    inStock: boolean;
+    color: string;
+    size: ProductSize;
+    description: Array<string>;
+    images: Array<ProductImage>;
+  }
+
+  interface ProductQuery {
+    category: string;
+    tag: string;
+    pricetag: string;
+    skip: number;
+    limit: number;
+    color: string;
+    instock: boolean;
+  }
 }

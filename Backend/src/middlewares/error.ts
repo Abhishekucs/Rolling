@@ -6,6 +6,7 @@ import {
 } from "../utils/rolling-response";
 import { v4 as uuidv4 } from "uuid";
 import Logger from "../utils/logger";
+import { MulterError } from "multer";
 
 async function errorHandlingMiddleware(
   error: Error,
@@ -27,6 +28,9 @@ async function errorHandlingMiddleware(
     if (/ECONNREFUSED.*27017/i.test(error.message)) {
       rollingResponse.message =
         "Could not connect to the database. It may be down.";
+    } else if (error instanceof MulterError) {
+      rollingResponse.status = 400;
+      rollingResponse.message = error.message;
     } else if (error instanceof URIError || error instanceof SyntaxError) {
       rollingResponse.status = 400;
       rollingResponse.message = "Unprocessable request";

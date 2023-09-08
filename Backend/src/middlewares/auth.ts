@@ -27,6 +27,8 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
 
     const { authorization: authHeader } = req.headers;
 
+    const contentType = req.headers["content-type"];
+
     try {
       if (authHeader) {
         token = await authenticateWithAuthHeader(authHeader, options);
@@ -37,7 +39,18 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
           email: "",
         };
       } else if (process.env.MODE === "dev") {
-        token = authenticateWithBody(req.body);
+        const normalizedContentType = contentType?.startsWith(
+          "multipart/form-data",
+        );
+        if (normalizedContentType) {
+          // add the value of uid and email for the predefined admin
+          // this is because later "checkIfUserIsAdmin" middleware is used, which require uid in req.ctx
+          token = {
+            type: "Bearer",
+            uid: `${process.env.PREDEFINED_ADMIN_UID}`,
+            email: `${process.env.PREDEFINED_ADMIN_EMAIL}`,
+          };
+        } else token = authenticateWithBody(req.body);
       } else {
         throw new RollingError(
           401,

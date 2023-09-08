@@ -33,6 +33,7 @@ export function init(): void {
       credential: admin.credential.cert(
         serviceAccount as unknown as ServiceAccount,
       ),
+      storageBucket: process.env.BUCKET_STORAGE_NAME,
     });
     Logger.success("Firebase app initialized");
   }

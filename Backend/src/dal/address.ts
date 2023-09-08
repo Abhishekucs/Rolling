@@ -55,3 +55,11 @@ export async function deleteAllAddress(uid: string): Promise<void> {
     await snapshot.ref.delete();
   });
 }
+
+export async function deleteById(
+  uid: string,
+  addressId: string,
+): Promise<void> {
+  const addressCollectionRef = getAddressCollection(uid);
+  await addressCollectionRef.doc(addressId).delete();
+}

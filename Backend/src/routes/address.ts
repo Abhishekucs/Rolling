@@ -121,4 +121,17 @@ router.patch(
   asyncHandler(AddressController.updateAddress),
 );
 
+router.delete(
+  "/:id",
+  authenticateRequest({
+    requireFreshToken: true,
+  }),
+  validateRequest({
+    params: {
+      id: addressIdValidation,
+    },
+  }),
+  asyncHandler(AddressController.deleteAddress),
+);
+
 export default router;

@@ -128,3 +128,13 @@ export async function updateAddress(
 
   return new RollingResponse("Address Updated");
 }
+
+export async function deleteAddress(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
+  const addressId = req.params["id"];
+
+  await AddressDAL.deleteById(uid, addressId);
+  return new RollingResponse("address deleted");
+}
