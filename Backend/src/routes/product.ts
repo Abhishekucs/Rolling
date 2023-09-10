@@ -22,9 +22,7 @@ const router = Router();
 const BASE_PRODUCT_VALIDATION_SCHEMA = {
   category: joi.string().valid("tshirt", "hoodie"),
   color: joi.string(),
-  pricetag: joi.string().valid("expensive", "cheap"),
-  instock: joi.boolean().required(),
-  tag: joi.string().valid("new", "old"),
+  filter: joi.string().valid("expensive", "cheap", "new", "old", "instock"),
 };
 
 const PRODUCT_VALIDATION_SCHEMA_WITH_LIMIT = {
@@ -47,22 +45,38 @@ router.get(
 router.post(
   "/",
   authenticateRequest(),
-  //   validateRequest({
-  //     body: {
-  //       category: joi.string().valid("tshirt", "hoodie").required(),
-  //       name: joi.string().min(1).required(),
-  //       price: joi.number().min(0).required(),
-  //       tag: joi.string().valid("old", "new").required(),
-  //       priceTag: joi.string().valid("expensive", "cheap").required(),
-  //       inStock: joi.boolean().required(),
-  //       color: joi.string().required(),
-  //       size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
-  //       description: joi.array().items(joi.string()).required(),
-  //     },
-  //   }),
-  handleImage(),
+  validateRequest({
+    body: {
+      category: joi.string().valid("tshirt", "hoodie").required(),
+      name: joi.string().min(1).required(),
+      description: joi.array().items(joi.string()).required(),
+    },
+  }),
   checkIfUserIsAdmin(),
   asyncHandler(ProductController.createNewProduct),
+);
+
+router.post(
+  "/variation/:productId",
+  authenticateRequest(),
+  handleImage(),
+  validateRequest({
+    body: {
+      color: joi.string().required(),
+      colorPrice: joi.number().min(0).required(),
+      sizes: joi.array().items(
+        joi.object({
+          size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
+          sizeSKU: joi.number().min(0).required(),
+        }),
+      ),
+    },
+    params: {
+      productId: joi.string().required(),
+    },
+  }),
+  checkIfUserIsAdmin(),
+  asyncHandler(ProductController.createNewVariation),
 );
 
 export default router;

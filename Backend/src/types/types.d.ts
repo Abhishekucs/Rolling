@@ -37,37 +37,34 @@ declare namespace RollingTypes {
   }
 
   type CategoryType = "tshirt" | "hoodie";
-  type ProductTag = "new" | "old";
-  type ProductPriceTag = "expensive" | "cheap";
+  type ProductTag = "new" | "sold out" | "none";
   type ProductSize = "xs" | "s" | "m" | "l" | "xl" | "xxl";
 
-  interface ProductImage {
-    src: string;
-    name: string;
-    imageId: string;
+  interface ProductVariantSize {
+    size: ProductSize;
+    sizeSKU: number;
+  }
+
+  interface ProductVariant {
+    variantId: string;
+    color: string;
+    colorSKU: number;
+    colorPrice: number;
+    images: Array<string>;
+    sizes: Array<ProductVariantSize>;
   }
 
   interface Product {
     productId: string;
     category: CategoryType;
     name: string;
-    price: number;
     tag: ProductTag;
-    priceTag: ProductPriceTag;
-    inStock: boolean;
-    color: string;
-    size: ProductSize;
+    totalSKU: number;
+    variants: Array<ProductVariant>;
     description: Array<string>;
-    images: Array<ProductImage>;
+    createdAt: number;
+    modifiedAt: number;
   }
 
-  interface ProductQuery {
-    category: string;
-    tag: string;
-    pricetag: string;
-    skip: number;
-    limit: number;
-    color: string;
-    instock: boolean;
-  }
+  type ProductWithoutVariants = Omit<RollingTypes.Product, "variants">;
 }

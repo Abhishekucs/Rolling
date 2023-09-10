@@ -115,6 +115,7 @@ function handleImage(): RequestHandler {
 
   return (req: RollingTypes.Request, res: Response, next: NextFunction) => {
     // return upload.array("images", 5);
+
     upload.array("images", 5)(req, res, (err: Error | string) => {
       if (err instanceof Error) {
         return next(err);
