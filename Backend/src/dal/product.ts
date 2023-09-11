@@ -49,46 +49,46 @@ async function skipTo(
   }
 }
 
-async function getProductsByColor(
-  query: FirebaseFirestore.Query<DocumentData>,
-  color: string,
-  stack: string,
-): Promise<RollingTypes.Product[]> {
-  const queryDocRef = await query.get();
+// async function getProductsByColor(
+//   query: FirebaseFirestore.Query<DocumentData>,
+//   color: string,
+//   stack: string,
+// ): Promise<RollingTypes.Product[]> {
+//   const queryDocRef = await query.get();
 
-  const products = await Promise.all(
-    _.map(queryDocRef.docs, async (doc) => {
-      const id = doc.id;
-      const querySnapshot = await getVariantCollection(id)
-        .where("color", "==", color)
-        .get();
-      const docs = querySnapshot.docs;
+//   const products = await Promise.all(
+//     _.map(queryDocRef.docs, async (doc) => {
+//       const id = doc.id;
+//       const querySnapshot = await getVariantCollection(id)
+//         .where("color", "==", color)
+//         .get();
+//       const docs = querySnapshot.docs;
 
-      const variant = _.map(docs, (doc) => {
-        return doc.data() as RollingTypes.ProductVariant;
-      });
+//       const variant = _.map(docs, (doc) => {
+//         return doc.data() as RollingTypes.ProductVariant;
+//       });
 
-      const parentData = doc.data() as RollingTypes.ProductWithoutVariants;
+//       const parentData = doc.data() as RollingTypes.ProductWithoutVariants;
 
-      const product: RollingTypes.Product = {
-        ...parentData,
-        variants: variant,
-      };
+//       const product: RollingTypes.Product = {
+//         ...parentData,
+//         variants: variant,
+//       };
 
-      return product;
-    }),
-  );
+//       return product;
+//     }),
+//   );
 
-  const filteredProducts = products.filter(
-    (product) => product?.variants?.length > 0,
-  );
+//   const filteredProducts = products.filter(
+//     (product) => product?.variants?.length > 0,
+//   );
 
-  if (filteredProducts.length > 0) {
-    return filteredProducts;
-  } else {
-    throw new RollingError(404, "The Product is not in the search", stack);
-  }
-}
+//   if (filteredProducts.length > 0) {
+//     return filteredProducts;
+//   } else {
+//     throw new RollingError(404, "The Product is not in the search", stack);
+//   }
+// }
 
 async function getProductsByCategoryAndSkip(
   query: FirebaseFirestore.Query<DocumentData>,
@@ -102,28 +102,54 @@ async function getProductsByCategoryAndSkip(
 }
 
 async function getProductsByColorAndSkip(
-  color: string,
+  query: FirebaseFirestore.Query<DocumentData>,
   skip: number,
   limit: number,
   stack: string,
 ): Promise<RollingTypes.Product[]> {
-  const colorQuery = FirebaseAdmin()
-    .firestore()
-    .collectionGroup("variants")
-    .where("color", "==", color);
+  const variantsDocRef = await skipTo(query, skip, limit, "variantId", stack);
+  return await handleVariantProductResponse(variantsDocRef);
+}
 
-  const variantsDocRef = await skipTo(
-    colorQuery,
-    skip,
-    limit,
-    "variantId",
-    stack,
+function getOrder(value: string): OrderByDirection {
+  if (value === "expensive" || value === "new") {
+    return "desc";
+  } else {
+    return "asc";
+  }
+}
+
+async function handleProductResponse(
+  docs: FirebaseFirestore.QueryDocumentSnapshot<DocumentData>[],
+): Promise<RollingTypes.Product[]> {
+  return await Promise.all(
+    _.map(docs, async (doc) => {
+      const data = doc?.data() as RollingTypes.ProductWithoutVariants;
+      const variantCollectionRef = getVariantCollection(data.productId);
+
+      const variantsDocRef = await variantCollectionRef.get();
+      const variantsDocs = variantsDocRef.docs;
+
+      const product: RollingTypes.Product = {
+        ...data,
+        variants: _.map(variantsDocs, (variant) => {
+          const variantData = variant.data() as RollingTypes.ProductVariant;
+
+          return variantData;
+        }),
+      };
+
+      return product;
+    }),
   );
+}
 
-  const variantsDocs = variantsDocRef.docs;
-
-  const products: RollingTypes.Product[] = await Promise.all(
-    _.map(variantsDocs, async (doc) => {
+async function handleVariantProductResponse(
+  querySnapshot: FirebaseFirestore.QuerySnapshot<DocumentData>,
+): Promise<RollingTypes.Product[]> {
+  const docs = querySnapshot.docs;
+  return await Promise.all(
+    _.map(docs, async (doc) => {
       const variantDoc = doc.data() as RollingTypes.ProductVariant;
 
       const parentDocRef = doc.ref.parent.parent;
@@ -139,16 +165,6 @@ async function getProductsByColorAndSkip(
       return product;
     }),
   );
-
-  return products;
-}
-
-function getOrder(value: string): OrderByDirection {
-  if (value === "expensive" || value === "new") {
-    return "desc";
-  } else {
-    return "asc";
-  }
 }
 
 export async function getProducts(
@@ -168,11 +184,13 @@ export async function getProducts(
     }
 
     const query: FirebaseFirestore.Query<DocumentData> = productCollectionRef;
+    const variantQuery: FirebaseFirestore.Query<DocumentData> = FirebaseAdmin()
+      .firestore()
+      .collectionGroup("variants");
 
-    // skip is non zero and rest of the parameters are undefined
     let queryDocRef = await skipTo(query, skip, limit, "productId", stack);
 
-    if (category !== undefined) {
+    if (category !== undefined && color == undefined && filter == undefined) {
       queryDocRef = await getProductsByCategoryAndSkip(
         query,
         category,
@@ -182,73 +200,69 @@ export async function getProducts(
       );
     }
 
-    if (color !== undefined && category !== undefined) {
-      const categoryQuery = query.where("category", "==", `${category}`);
+    if (color !== undefined && category !== undefined && filter == undefined) {
+      const colorQuery = variantQuery.where("color", "==", `${color}`);
+      const colorQuerySnapshot = await colorQuery.get();
+      const colorDocs = colorQuerySnapshot.docs;
 
-      let products = await getProductsByColor(categoryQuery, color, stack);
+      const parentIds = _.map(colorDocs, (doc) => {
+        const id = doc.ref.parent.parent?.id;
+        return id;
+      });
 
-      if (skip >= products.length) {
-        throw new RollingError(404, "The Product is not in the search");
-      } else if (skip > 0) {
-        products = _.drop(products, skip);
+      const categoryQuery = query
+        .where("category", "==", `${category}`)
+        .where("productId", "in", parentIds);
 
-        if (limit > 0 && limit <= products.length) {
-          products = _.slice(products, 0, limit);
-        } else if (limit > products.length) {
-          limit = products.length;
-          products = _.slice(products, 0, limit);
-        }
+      queryDocRef = await skipTo(
+        categoryQuery,
+        skip,
+        limit,
+        "productId",
+        stack,
+      );
+    }
+
+    if (filter && color && category !== undefined) {
+      const colorQuery = variantQuery.where("color", "==", `${color}`);
+      let querySnapshot = await colorQuery.get();
+      if (querySnapshot.empty) {
+        throw new RollingError(404, "The Product is not in the search", stack);
+      }
+      if (filter == "expensive" || filter == "cheap") {
+        querySnapshot = await colorQuery
+          .orderBy("colorPrice", getOrder(filter))
+          .get();
+      }
+      const queryDocs = querySnapshot.docs;
+      const filteredVariantQuerySnapshot = await Promise.all(
+        _.map(queryDocs, async (doc) => {
+          const parentDocSnapshot = await doc.ref.parent.parent?.get();
+          const data = parentDocSnapshot?.data();
+          if (data !== undefined) {
+            const parentCategory = data["category"];
+            if (parentCategory == category) {
+              return doc;
+            }
+          }
+        }),
+      );
+      const filteredVariants = filteredVariantQuerySnapshot.filter(
+        (doc) => doc !== undefined,
+      );
+
+      if (filteredVariants.length == 0) {
+        throw new RollingError(404, "The Product is not in the search", stack);
       }
 
-      if (limit > 0 && limit <= products.length) {
-        products = _.slice(products, 0, limit);
-      } else if (limit > products.length) {
-        limit = products.length;
-        products = _.slice(products, 0, limit);
-      }
-
-      return products;
-    }
-
-    if (filter !== undefined && color !== undefined && category !== undefined) {
-      console.log("filter");
-    }
-
-    if (filter !== undefined && color !== undefined) {
-      console.log("filter color");
-    }
-
-    if (color !== undefined) {
-      return await getProductsByColorAndSkip(color, skip, limit, stack);
-    }
-
-    if (filter !== undefined) {
-      if (filter === "expensive" || filter === "cheap") {
-        const priceQuery = FirebaseAdmin()
-          .firestore()
-          .collectionGroup("variants");
-
-        const variantsDocRef = await skipTo(
-          priceQuery,
-          skip,
-          limit,
-          "colorPrice",
-          stack,
-          getOrder(filter),
-        );
-
-        const variantsDocs = variantsDocRef.docs;
-
-        const products: RollingTypes.Product[] = await Promise.all(
-          _.map(variantsDocs, async (doc) => {
-            const variantDoc = doc.data() as RollingTypes.ProductVariant;
-
-            const parentDocRef = doc.ref.parent.parent;
+      if (filteredVariants !== undefined) {
+        let products = await Promise.all(
+          _.map(filteredVariants, async (doc) => {
+            const variantDoc = doc?.data() as RollingTypes.ProductVariant;
+            const parentDocRef = doc?.ref.parent.parent;
             const parentDoc = await parentDocRef?.get();
-
             const parentData =
               parentDoc?.data() as RollingTypes.ProductWithoutVariants;
-
             const product: RollingTypes.Product = {
               ...parentData,
               variants: [variantDoc],
@@ -257,7 +271,120 @@ export async function getProducts(
           }),
         );
 
+        if (skip > 0 && skip >= products.length) {
+          throw new RollingError(
+            404,
+            "The Product is not in the search",
+            stack,
+          );
+        } else {
+          products = _.drop(products, skip);
+        }
+
+        if (limit > products.length) {
+          limit = products.length;
+          products = _.slice(products, 0, limit);
+        } else if (limit > 0) {
+          products = _.slice(products, 0, limit);
+        }
+
         return products;
+      }
+
+      //   const parentQuery = query
+      //     .where("category", "==", `${category}`)
+      //     .where("productId", "in", parentIds);
+      //   const parentProductQuerySnapshot = await skipTo(
+      //     parentQuery,
+      //     skip,
+      //     limit,
+      //     "category",
+      //     stack,
+      //   );
+      //   const parentProductDocs = parentProductQuerySnapshot.docs;
+      //   const filteredParentIdsOrder = _.intersection(
+      //     parentIds,
+      //     parentProductDocs.map((item) => item.id),
+      //   );
+      //   const rearrangedDoc = _.orderBy(parentProductDocs, (item) =>
+      //     _.indexOf(filteredParentIdsOrder, item.id),
+      //   );
+      //   return await handleProductResponse(rearrangedDoc);
+    }
+
+    if (filter !== undefined && color !== undefined && category == undefined) {
+      const colorQuery = variantQuery.where("color", "==", `${color}`);
+
+      if (filter == "expensive" || filter == "cheap") {
+        const colorQuerySnapshot = await skipTo(
+          colorQuery,
+          skip,
+          limit,
+          "colorPrice",
+          stack,
+          getOrder(filter),
+        );
+
+        return await handleVariantProductResponse(colorQuerySnapshot);
+      }
+
+      if (filter == "new" || filter == "old" || filter == "instock") {
+        const querySnapshot = await colorQuery.get();
+
+        if (querySnapshot.empty) {
+          throw new RollingError(404, "The Product is not in the search");
+        }
+
+        const colorDocs = querySnapshot.docs;
+
+        const parentIds = _.map(colorDocs, (doc) => {
+          const id = doc.ref.parent.parent?.id;
+          return id;
+        });
+
+        const parentQuery = query.where("productId", "in", parentIds);
+
+        let parentQuerySnapshot = await skipTo(
+          parentQuery,
+          skip,
+          limit,
+          "modifiedAt",
+          stack,
+          getOrder(filter),
+        );
+
+        if (filter == "instock") {
+          const inStockQuery = parentQuery.where("totalSKU", ">", 0);
+          parentQuerySnapshot = await skipTo(
+            inStockQuery,
+            skip,
+            limit,
+            "totalSKU",
+            stack,
+          );
+        }
+
+        const parentDocs = parentQuerySnapshot.docs;
+        return await handleProductResponse(parentDocs);
+      }
+    }
+
+    if (color !== undefined && filter == undefined && category == undefined) {
+      const colorQuery = variantQuery.where("color", "==", `${color}`);
+      return await getProductsByColorAndSkip(colorQuery, skip, limit, stack);
+    }
+
+    if (filter !== undefined && color === undefined && category === undefined) {
+      if (filter === "expensive" || filter === "cheap") {
+        const variantsDocRef = await skipTo(
+          variantQuery,
+          skip,
+          limit,
+          "colorPrice",
+          stack,
+          getOrder(filter),
+        );
+        return await handleVariantProductResponse(variantsDocRef);
       }
 
       if (filter === "new" || filter === "old") {
@@ -278,26 +405,7 @@ export async function getProducts(
     }
 
     const productDocs = queryDocRef.docs;
-    return Promise.all(
-      _.map(productDocs, async (doc) => {
-        const data = doc.data() as RollingTypes.ProductWithoutVariants;
-        const variantCollectionRef = getVariantCollection(data.productId);
-
-        const variantsDocRef = await variantCollectionRef.get();
-        const variantsDocs = variantsDocRef.docs;
-
-        const product: RollingTypes.Product = {
-          ...data,
-          variants: _.map(variantsDocs, (variant) => {
-            const variantData = variant.data() as RollingTypes.ProductVariant;
-
-            return variantData;
-          }),
-        };
-
-        return product;
-      }),
-    );
+    return await handleProductResponse(productDocs);
   } catch (e) {
     console.log(e);
     throw new RollingError(500, e.message);
