@@ -34,7 +34,6 @@ export async function createNewProduct(
     name,
     description,
     totalSKU: 0,
-    tag: "new",
     createdAt: Date.now(),
     modifiedAt: Date.now(),
   };
@@ -50,7 +49,7 @@ export async function createNewVariation(
 
   const product = await ProductDAL.findProductById(productId);
 
-  const { color, colorPrice, sizes } = req.body;
+  const { color, price, sizes } = req.body;
   const images = req.files as Express.Multer.File[];
 
   let totalColorSKU = 0;
@@ -65,9 +64,12 @@ export async function createNewVariation(
     variantId: uuidv4(),
     color,
     colorSKU: totalColorSKU,
-    colorPrice: parseInt(colorPrice as string, 10),
+    price: parseInt(price as string, 10),
     sizes,
     images: signedUrl,
+    createdAt: Date.now(),
+    modifiedAt: Date.now(),
+    tag: "new",
   };
 
   await ProductDAL.createVariation(productVariant, productId);

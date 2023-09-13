@@ -8,6 +8,7 @@ import {
   validateRequest,
 } from "../middlewares/api-utils";
 import * as ProductController from "../controllers/product";
+import { isValidUuidV4 } from "../utils/validation";
 
 const router = Router();
 
@@ -49,7 +50,7 @@ router.post(
     body: {
       category: joi.string().valid("tshirt", "hoodie").required(),
       name: joi.string().min(1).required(),
-      description: joi.array().items(joi.string()).required(),
+      description: joi.array().items(joi.string().min(1).required()).required(),
     },
   }),
   checkIfUserIsAdmin(),
@@ -63,7 +64,7 @@ router.post(
   validateRequest({
     body: {
       color: joi.string().required(),
-      colorPrice: joi.number().min(0).required(),
+      price: joi.number().min(0).required(),
       sizes: joi.array().items(
         joi.object({
           size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
@@ -72,7 +73,18 @@ router.post(
       ),
     },
     params: {
-      productId: joi.string().required(),
+      productId: joi
+        .string()
+        .custom((value, helpers) => {
+          if (!isValidUuidV4(value)) {
+            return helpers.error("string.pattern.base");
+          }
+          return value;
+        })
+        .messages({
+          "string.pattern.base": "Invalid Product Id",
+        })
+        .required(),
     },
   }),
   checkIfUserIsAdmin(),

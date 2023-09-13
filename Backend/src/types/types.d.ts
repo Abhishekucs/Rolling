@@ -49,16 +49,18 @@ declare namespace RollingTypes {
     variantId: string;
     color: string;
     colorSKU: number;
-    colorPrice: number;
+    price: number;
     images: Array<string>;
     sizes: Array<ProductVariantSize>;
+    tag: ProductTag;
+    createdAt: number;
+    modifiedAt: number;
   }
 
   interface Product {
     productId: string;
     category: CategoryType;
     name: string;
-    tag: ProductTag;
     totalSKU: number;
     variants: Array<ProductVariant>;
     description: Array<string>;
