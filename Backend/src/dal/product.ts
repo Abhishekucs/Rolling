@@ -1,8 +1,9 @@
 import FirebaseAdmin from "../init/firebase-admin";
 import RollingError from "../utils/error";
 import { DocumentData } from "@google-cloud/firestore";
-
 import _ from "lodash";
+import { getOrder } from "../utils/misc";
+import { renameImageFile } from "../utils/upload-file";
 
 function getProductCollection(): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
   return FirebaseAdmin().firestore().collection("products");
@@ -19,15 +20,6 @@ function getVariantCollection(
 }
 
 type ProductResult = Omit<RollingTypes.Product, "variants">;
-type OrderByDirection = "asc" | "desc";
-
-function getOrder(value: string): OrderByDirection {
-  if (value === "expensive" || value === "new") {
-    return "desc";
-  } else {
-    return "asc";
-  }
-}
 
 async function variantsToProducts(
   docs: FirebaseFirestore.QueryDocumentSnapshot<DocumentData>[],
@@ -68,7 +60,6 @@ function skipAndLimit(
   if (skip > 0 && skip >= products.length) {
     throw new RollingError(404, "Product is empty", stack);
   }
-
   products = products.slice(skip > 0 ? skip : 0);
 
   if (limit > products.length) {
@@ -167,6 +158,31 @@ export async function findProductById(
   return data as ProductResult;
 }
 
+export async function getProductById(
+  productId: string,
+): Promise<RollingTypes.Product> {
+  const productCollectionRef = getProductCollection();
+  const productQuerySnapshot = await productCollectionRef.doc(productId).get();
+  if (!productQuerySnapshot.exists) {
+    throw new RollingError(404, "Product does not exists");
+  }
+  const productWithoutVariants =
+    productQuerySnapshot.data() as RollingTypes.ProductWithoutVariants;
+
+  const variantCollectionRef = getVariantCollection(productId);
+  const variantQuerySnapshot = await variantCollectionRef.get();
+  const variantDocs = variantQuerySnapshot.docs;
+  const variants = variantDocs.map(
+    (doc) => doc.data() as RollingTypes.ProductVariant,
+  );
+
+  const Product: RollingTypes.Product = {
+    ...productWithoutVariants,
+    variants,
+  };
+  return Product;
+}
+
 export async function createVariation(
   variant: RollingTypes.ProductVariant,
   productId: string,
@@ -183,4 +199,49 @@ export async function updateTotalSkus(
   await productCollectionRef.doc(productId).update({
     totalSKU: totalSku,
   });
+}
+
+export async function updateProduct(
+  name: string,
+  previousName: string,
+  description: Array<string>,
+  productId: string,
+): Promise<void> {
+  if (name === previousName) {
+    throw new RollingError(403, "New Name is same as the old name");
+  }
+
+  try {
+    const updatedImageUrl = await renameImageFile(previousName, name);
+    const variantCollectionRef = getVariantCollection(productId);
+    const variantQuerySnapshot = await variantCollectionRef.get();
+    const docs = variantQuerySnapshot.docs;
+
+    for (const doc of docs) {
+      const data = doc.data() as RollingTypes.ProductVariant;
+      const color = data["color"];
+
+      // Find the matching color in updatedImageUrl
+      const matchingColorRecord = updatedImageUrl.find(
+        (record) => record[color],
+      );
+
+      if (matchingColorRecord) {
+        // Update the image field with the new image URL
+        await doc.ref.update({
+          images: matchingColorRecord[color],
+          modifiedAt: Date.now(),
+        });
+      }
+    }
+
+    const productCollectionRef = getProductCollection();
+    await productCollectionRef.doc(productId).update({
+      name,
+      description,
+    });
+  } catch (e) {
+    console.log(e);
+    throw new RollingError(500, e);
+  }
 }

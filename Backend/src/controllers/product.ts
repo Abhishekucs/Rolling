@@ -81,3 +81,24 @@ export async function createNewVariation(
 
   return new RollingResponse("variant created");
 }
+
+export async function getProductById(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const productId = req.params["productId"];
+
+  const product = await ProductDAL.getProductById(productId);
+
+  return new RollingResponse("Product recieved", product);
+}
+
+export async function updateProduct(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const productId = req.params["productId"];
+
+  const { name, previousName, description } = req.body;
+
+  await ProductDAL.updateProduct(name, previousName, description, productId);
+  return new RollingResponse("product updated successfully");
+}

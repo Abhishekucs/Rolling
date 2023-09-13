@@ -32,6 +32,57 @@ export async function uploadFile(
   return signedUrl;
 }
 
+export async function renameImageFile(
+  previousName: string,
+  newName: string,
+): Promise<Array<Record<string, string[]>>> {
+  const moveOptions = {
+    preconditionOpts: {
+      ifGenerationMatch: 0,
+    },
+  };
+  //   const deleteOptions = {
+  //     ifGenerationMatch: 0,
+  //   };
+  const prefix = `${BASE_STORAGE_PATH}/${previousName}`;
+
+  const [files] = await getStorageBucket().getFiles({
+    prefix,
+  });
+
+  const updatedUrls: Array<Record<string, string[]>> = [];
+
+  files.forEach(async (file) => {
+    const fileName = file.name;
+    const color = fileName.split("/")[2];
+    const imageName = fileName.split("/")[3];
+
+    const PREVIOUS_STORAGE_PATH = `${BASE_STORAGE_PATH}/${previousName}/${color}/${imageName}`;
+    const NEW_STORAGE_PATH = `${BASE_STORAGE_PATH}/${newName}/${color}/${imageName}`;
+    // Moves the file within the bucket
+    await getStorageBucket()
+      .file(PREVIOUS_STORAGE_PATH)
+      .move(NEW_STORAGE_PATH, moveOptions);
+    const [updatedUrl] = await generateSignedUrl(NEW_STORAGE_PATH);
+
+    // Check if the updatedUrls array already contains a record with the same color
+    const existingRecordIndex = updatedUrls.findIndex(
+      (record) => record[color],
+    );
+    if (existingRecordIndex !== -1) {
+      // If a record with the same color exists, add the updated URL to it
+      updatedUrls[existingRecordIndex][color].push(updatedUrl);
+    } else {
+      // If no record with the same color exists, create a new record
+      const record: Record<string, string[]> = {};
+      record[color] = [updatedUrl];
+      updatedUrls.push(record);
+    }
+  });
+
+  return updatedUrls;
+}
+
 async function generateSignedUrl(
   filename: string,
 ): Promise<GetSignedUrlResponse> {

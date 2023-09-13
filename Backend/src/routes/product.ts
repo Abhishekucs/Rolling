@@ -32,6 +32,19 @@ const PRODUCT_VALIDATION_SCHEMA_WITH_LIMIT = {
   limit: joi.number().min(0).max(50),
 };
 
+const idValidation = joi
+  .string()
+  .custom((value, helpers) => {
+    if (!isValidUuidV4(value)) {
+      return helpers.error("string.pattern.base");
+    }
+    return value;
+  })
+  .messages({
+    "string.pattern.base": "Invalid Product Id",
+  })
+  .required();
+
 router.get(
   "/",
   authenticateRequest({
@@ -58,7 +71,7 @@ router.post(
 );
 
 router.post(
-  "/variation/:productId",
+  "/:productId/variant",
   authenticateRequest(),
   handleImage(),
   validateRequest({
@@ -73,22 +86,58 @@ router.post(
       ),
     },
     params: {
-      productId: joi
-        .string()
-        .custom((value, helpers) => {
-          if (!isValidUuidV4(value)) {
-            return helpers.error("string.pattern.base");
-          }
-          return value;
-        })
-        .messages({
-          "string.pattern.base": "Invalid Product Id",
-        })
-        .required(),
+      productId: idValidation,
     },
   }),
   checkIfUserIsAdmin(),
   asyncHandler(ProductController.createNewVariation),
 );
 
+router.get(
+  "/:productId",
+  authenticateRequest({
+    isPublic: true,
+  }),
+  validateRequest({
+    params: {
+      productId: idValidation,
+    },
+  }),
+  asyncHandler(ProductController.getProductById),
+);
+
+router.patch(
+  "/:productId",
+  authenticateRequest(),
+  validateRequest({
+    body: {
+      name: joi.string().min(1),
+      previousName: joi.string().min(1),
+      description: joi.array<string>().items(joi.string().min(1).required()),
+    },
+  }),
+  asyncHandler(ProductController.updateProduct),
+);
+
+// router.patch(
+//   "/:productId/variant/:variantId",
+//   authenticateRequest(),
+//   handleImage(),
+//   validateRequest({
+//     body: {
+//       price: joi.number().min(0).required(),
+//       sizes: joi.array().items(
+//         joi.object({
+//           size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
+//           sizeSKU: joi.number().min(0).required(),
+//         }),
+//       ),
+//     },
+//     params: {
+//       productId: idValidation,
+//       variantId: idValidation,
+//     },
+//   }),
+//   ProductController.updateVariant,
+// );
 export default router;
