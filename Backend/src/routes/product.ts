@@ -12,14 +12,6 @@ import { isValidUuidV4 } from "../utils/validation";
 
 const router = Router();
 
-// product
-// add product - admin
-// update product - admin
-// get all product - admin,users
-// delete product - admin
-// get product by id - admin, users
-// filter product - admin, users
-
 const BASE_PRODUCT_VALIDATION_SCHEMA = {
   category: joi.string().valid("tshirt", "hoodie"),
   color: joi.string(),

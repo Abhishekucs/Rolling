@@ -10,6 +10,12 @@ import multer from "multer";
 import { isAdmin } from "../dal/admin";
 import fs from "fs";
 
+const emptyMiddleware = (
+  _req: RollingTypes.Request,
+  _res: Response,
+  next: NextFunction,
+): void => next();
+
 type AsyncHandler = (
   req: RollingTypes.Request,
   res?: Response,
@@ -153,4 +159,19 @@ function checkIfUserIsAdmin(): RequestHandler {
   };
 }
 
-export { asyncHandler, validateRequest, handleImage, checkIfUserIsAdmin };
+/**
+ * Uses the middlewares only in production. Otherwise, uses an empty middleware.
+ */
+function useInProduction(middlewares: RequestHandler[]): RequestHandler[] {
+  return middlewares.map((middleware) =>
+    process.env.MODE === "dev" ? emptyMiddleware : middleware,
+  );
+}
+
+export {
+  asyncHandler,
+  validateRequest,
+  handleImage,
+  checkIfUserIsAdmin,
+  useInProduction,
+};

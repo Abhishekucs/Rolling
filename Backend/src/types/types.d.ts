@@ -7,7 +7,25 @@ declare namespace RollingTypes {
     email: string;
   }
 
+  interface Configuration {
+    maintenance: boolean;
+    users: {
+      signup: boolean;
+    };
+    admin: {
+      endpointsEnabled: boolean;
+    };
+    rateLimiting: {
+      badAuthentication: {
+        enabled: boolean;
+        penalty: number;
+        flaggedStatusCodes: number[];
+      };
+    };
+  }
+
   interface Context {
+    configuration: Configuration;
     decodedToken: DecodedToken;
   }
 
