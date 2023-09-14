@@ -40,10 +40,7 @@ declare namespace RollingTypes {
   type ProductTag = "new" | "sold out" | "none";
   type ProductSize = "xs" | "s" | "m" | "l" | "xl" | "xxl";
 
-  interface ProductVariantSize {
-    size: ProductSize;
-    sizeSKU: number;
-  }
+  type ProductVariantSize = Array<Record<ProductSize, number>>;
 
   interface ProductVariant {
     variantId: string;
@@ -51,7 +48,7 @@ declare namespace RollingTypes {
     colorSKU: number;
     price: number;
     images: Array<string>;
-    sizes: Array<ProductVariantSize>;
+    sizes: ProductVariantSize;
     tag: ProductTag;
     createdAt: number;
     modifiedAt: number;

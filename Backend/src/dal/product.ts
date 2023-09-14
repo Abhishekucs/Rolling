@@ -2,8 +2,14 @@ import FirebaseAdmin from "../init/firebase-admin";
 import RollingError from "../utils/error";
 import { DocumentData } from "@google-cloud/firestore";
 import _ from "lodash";
-import { getOrder } from "../utils/misc";
-import { renameImageFile } from "../utils/upload-file";
+import { v4 as uuidv4 } from "uuid";
+import { getOrder, sumAllRecordValue, updateRecordArray } from "../utils/misc";
+import {
+  deleteFile,
+  getFiles,
+  renameImageFile,
+  uploadFile,
+} from "../utils/blob-storage";
 
 function getProductCollection(): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
   return FirebaseAdmin().firestore().collection("products");
@@ -81,11 +87,6 @@ export async function getProducts(
 ): Promise<Array<RollingTypes.Product>> {
   try {
     const productCollectionRef = getProductCollection();
-    //const productSnapshot = await productCollectionRef.get();
-
-    // if (productSnapshot.empty) {
-    //   throw new RollingError(404, "Product is empty", stack);
-    // }
     const productQuery: FirebaseFirestore.Query<DocumentData> =
       productCollectionRef;
     let variantQuery: FirebaseFirestore.Query<DocumentData> = FirebaseAdmin()
@@ -184,11 +185,38 @@ export async function getProductById(
 }
 
 export async function createVariation(
-  variant: RollingTypes.ProductVariant,
+  sizes: RollingTypes.ProductVariantSize,
+  color: string,
+  name: string,
+  images: Express.Multer.File[],
+  totalSKU: number,
   productId: string,
+  price: number,
 ): Promise<void> {
+  const updatedSizes = updateRecordArray(sizes, sizes);
+  const totalColorSKU: number = sumAllRecordValue(updatedSizes);
+
+  const signedUrl = await uploadFile(color, name, images);
+
+  const productVariant: RollingTypes.ProductVariant = {
+    variantId: uuidv4(),
+    color,
+    colorSKU: totalColorSKU,
+    price: parseInt(price as unknown as string, 10),
+    sizes: updatedSizes,
+    images: signedUrl,
+    createdAt: Date.now(),
+    modifiedAt: Date.now(),
+    tag: "new",
+  };
+
+  //update the totalsku in product
+  const updatedTotalSku = totalSKU + totalColorSKU;
+
+  await updateTotalSkus(productId, updatedTotalSku);
+
   const variantCollectionRef = getVariantCollection(productId);
-  await variantCollectionRef.doc(variant.variantId).set(variant);
+  await variantCollectionRef.doc(productVariant.variantId).set(productVariant);
 }
 
 export async function updateTotalSkus(
@@ -241,7 +269,105 @@ export async function updateProduct(
       description,
     });
   } catch (e) {
-    console.log(e);
     throw new RollingError(500, e);
   }
+}
+
+export async function updateVariant(
+  sizes: RollingTypes.ProductVariantSize | undefined,
+  price: number | undefined,
+  images: Express.Multer.File[] | undefined,
+  variantId: string,
+  productId: string,
+): Promise<void> {
+  try {
+    const productDoc = (
+      await getProductCollection().doc(productId).get()
+    ).data() as RollingTypes.ProductWithoutVariants;
+    const variantCollectionRef = getVariantCollection(productId);
+    const variantDoc = (
+      await variantCollectionRef.doc(variantId).get()
+    ).data() as RollingTypes.ProductVariant;
+
+    let signedUrl: string[] = variantDoc.images;
+    let colorPrice: number = variantDoc.price;
+    let totalColorSKU: number = variantDoc.colorSKU;
+    let updatedSizes: RollingTypes.ProductVariantSize = variantDoc.sizes;
+
+    if (images && !_.isEmpty(images)) {
+      const color = variantDoc.color;
+      const name = productDoc.name;
+      const filePath = `${process.env.BASE_STORAGE_PATH}/${name}/${color}`;
+      const [files] = await getFiles(filePath);
+      await Promise.all(
+        files.map(async (file) => {
+          const imageName = file.name.split("/")[3];
+          const updatedFilePath = `${filePath}/${imageName}`;
+          await deleteFile(updatedFilePath);
+        }),
+      );
+
+      signedUrl = await uploadFile(color, name, images);
+    }
+
+    if (price) {
+      colorPrice = price;
+    }
+
+    if (sizes) {
+      updatedSizes = updateRecordArray(variantDoc.sizes, sizes);
+      const totalSizes = sumAllRecordValue(updatedSizes);
+      totalColorSKU = parseInt(totalSizes as unknown as string, 10);
+    }
+
+    await getVariantCollection(productId).doc(variantId).update({
+      images: signedUrl,
+      price: colorPrice,
+      colorSKU: totalColorSKU,
+      sizes: updatedSizes,
+      modifiedAt: Date.now(),
+    });
+
+    //update the totalsku in product
+    const allVariantDocs = (await variantCollectionRef.get()).docs;
+    let totalSku = 0;
+
+    allVariantDocs.forEach((doc) => {
+      const colorSku = doc.data()["colorSKU"];
+      totalSku = totalSku + colorSku;
+    });
+
+    await updateTotalSkus(productId, totalSku);
+  } catch (error) {
+    throw new RollingError(500, error.message);
+  }
+}
+
+export async function deleteProductById(productId: string): Promise<void> {
+  //delete blob storage
+  const productDoc = (
+    await getProductCollection().doc(productId).get()
+  ).data() as RollingTypes.ProductWithoutVariants;
+  const variantDocs = (await getVariantCollection(productId).get()).docs;
+
+  await Promise.all(
+    variantDocs.map(async (doc) => {
+      const data = doc.data() as RollingTypes.ProductVariant;
+      const color = data.color;
+      const name = productDoc.name;
+      const filePath = `${process.env.BASE_STORAGE_PATH}/${name}/${color}`;
+      const [files] = await getFiles(filePath);
+      files.forEach(async (file) => {
+        const imageName = file.name.split("/")[3];
+        const updatedFilePath = `${filePath}/${imageName}`;
+        await deleteFile(updatedFilePath);
+      });
+
+      //delete variant
+      await getVariantCollection(productId).doc(data.variantId).delete();
+    }),
+  );
+
+  // delete product collection
+  await getProductCollection().doc(productId).delete();
 }

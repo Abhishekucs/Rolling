@@ -45,6 +45,17 @@ const idValidation = joi
   })
   .required();
 
+const sizesValidation = joi
+  .array()
+  .items(
+    joi
+      .object()
+      .pattern(
+        joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
+        joi.number().min(0).required(),
+      ),
+  );
+
 router.get(
   "/",
   authenticateRequest({
@@ -78,12 +89,7 @@ router.post(
     body: {
       color: joi.string().required(),
       price: joi.number().min(0).required(),
-      sizes: joi.array().items(
-        joi.object({
-          size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
-          sizeSKU: joi.number().min(0).required(),
-        }),
-      ),
+      sizes: sizesValidation,
     },
     params: {
       productId: idValidation,
@@ -116,28 +122,39 @@ router.patch(
       description: joi.array<string>().items(joi.string().min(1).required()),
     },
   }),
+  checkIfUserIsAdmin(),
   asyncHandler(ProductController.updateProduct),
 );
 
-// router.patch(
-//   "/:productId/variant/:variantId",
-//   authenticateRequest(),
-//   handleImage(),
-//   validateRequest({
-//     body: {
-//       price: joi.number().min(0).required(),
-//       sizes: joi.array().items(
-//         joi.object({
-//           size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
-//           sizeSKU: joi.number().min(0).required(),
-//         }),
-//       ),
-//     },
-//     params: {
-//       productId: idValidation,
-//       variantId: idValidation,
-//     },
-//   }),
-//   ProductController.updateVariant,
-// );
+router.patch(
+  "/:productId/variant/:variantId",
+  authenticateRequest(),
+  handleImage(),
+  validateRequest({
+    body: {
+      price: joi.number().min(0),
+      sizes: sizesValidation,
+    },
+    params: {
+      productId: idValidation,
+      variantId: idValidation,
+    },
+  }),
+  checkIfUserIsAdmin(),
+  asyncHandler(ProductController.updateVariant),
+);
+
+router.delete(
+  "/:productId",
+  authenticateRequest({
+    requireFreshToken: true,
+  }),
+  validateRequest({
+    params: {
+      productId: idValidation,
+    },
+  }),
+  checkIfUserIsAdmin(),
+  asyncHandler(ProductController.deleteProduct),
+);
 export default router;

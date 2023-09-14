@@ -2,7 +2,7 @@ import { RollingResponse } from "../utils/rolling-response";
 import * as ProductDAL from "../dal/product";
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
-import { uploadFile } from "../utils/upload-file";
+import RollingError from "../utils/error";
 
 export async function getAllProducts(
   req: RollingTypes.Request,
@@ -52,32 +52,15 @@ export async function createNewVariation(
   const { color, price, sizes } = req.body;
   const images = req.files as Express.Multer.File[];
 
-  let totalColorSKU = 0;
-  _.forEach(sizes as RollingTypes.ProductVariantSize[], (size) => {
-    const parsedSku = parseInt(size.sizeSKU as unknown as string, 10);
-    totalColorSKU = totalColorSKU + parsedSku;
-  });
-
-  const signedUrl = await uploadFile(color, product.name, images);
-
-  const productVariant: RollingTypes.ProductVariant = {
-    variantId: uuidv4(),
-    color,
-    colorSKU: totalColorSKU,
-    price: parseInt(price as string, 10),
+  await ProductDAL.createVariation(
     sizes,
-    images: signedUrl,
-    createdAt: Date.now(),
-    modifiedAt: Date.now(),
-    tag: "new",
-  };
-
-  await ProductDAL.createVariation(productVariant, productId);
-
-  //update the totalsku in product
-  const updatedTotalSku = product.totalSKU + totalColorSKU;
-
-  await ProductDAL.updateTotalSkus(productId, updatedTotalSku);
+    color,
+    product.name,
+    images,
+    product.totalSKU,
+    productId,
+    price,
+  );
 
   return new RollingResponse("variant created");
 }
@@ -101,4 +84,33 @@ export async function updateProduct(
 
   await ProductDAL.updateProduct(name, previousName, description, productId);
   return new RollingResponse("product updated successfully");
+}
+
+export async function updateVariant(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const productId = req.params["productId"];
+  const variantId = req.params["variantId"];
+  const { sizes, price } = req.body;
+  const images = req.files as Express.Multer.File[];
+
+  if (images === undefined && sizes === undefined && price === undefined) {
+    throw new RollingError(
+      403,
+      "Either images or sizes or price should be valid value",
+    );
+  }
+
+  await ProductDAL.updateVariant(sizes, price, images, variantId, productId);
+
+  return new RollingResponse("variant updated successfully");
+}
+
+export async function deleteProduct(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const productId = req.params["productId"];
+
+  await ProductDAL.deleteProductById(productId);
+  return new RollingResponse("product deleted");
 }
