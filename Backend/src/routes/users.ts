@@ -1,9 +1,14 @@
 import { Router } from "express";
 import { authenticateRequest } from "../middlewares/auth";
 import * as UserController from "../controllers/users";
-import { asyncHandler, validateRequest } from "../middlewares/api-utils";
+import {
+  asyncHandler,
+  validateConfiguration,
+  validateRequest,
+} from "../middlewares/api-utils";
 import Joi from "joi";
 import { containsProfanity, isUsernameValid } from "../utils/validation";
+import * as RateLimit from "../middlewares/rate-limit";
 
 const router = Router();
 
@@ -27,11 +32,23 @@ const nameValidation = Joi.string()
       "Username invalid. Name cannot use special characters or contain more than 100 characters. Can include _ . and - ",
   });
 
-router.get("/", authenticateRequest(), asyncHandler(UserController.getUser));
+router.get(
+  "/",
+  authenticateRequest(),
+  RateLimit.userGet,
+  asyncHandler(UserController.getUser),
+);
 
 router.post(
   "/signup",
+  validateConfiguration({
+    criteria: (configuration) => {
+      return configuration.users.signUp;
+    },
+    invalidMessage: "Sign up is temporarily disabled",
+  }),
   authenticateRequest(),
+  RateLimit.userSignup,
   validateRequest({
     body: {
       uid: Joi.string().token(),
@@ -47,6 +64,7 @@ router.patch(
   authenticateRequest({
     requireFreshToken: true,
   }),
+  RateLimit.userUpdateName,
   validateRequest({
     body: {
       name: nameValidation,
@@ -58,11 +76,13 @@ router.patch(
 router.get(
   "/verificationEmail",
   authenticateRequest(),
+  RateLimit.userRequestVerificationEmail,
   asyncHandler(UserController.sendVerificationEmail),
 );
 
 router.post(
   "/forgotPasswordEmail",
+  RateLimit.userForgotPasswordEmail,
   validateRequest({
     body: {
       email: Joi.string().email().required(),
@@ -76,7 +96,17 @@ router.delete(
   authenticateRequest({
     requireFreshToken: true,
   }),
+  RateLimit.userDelete,
   asyncHandler(UserController.deleteUser),
+);
+
+router.post(
+  "/revokeAllTokens",
+  authenticateRequest({
+    requireFreshToken: true,
+  }),
+  RateLimit.userRevokeAllTokens,
+  asyncHandler(UserController.revokeAllTokens),
 );
 
 export default router;

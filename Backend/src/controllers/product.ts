@@ -3,6 +3,7 @@ import * as ProductDAL from "../dal/product";
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import RollingError from "../utils/error";
+import Logger from "../utils/logger";
 
 export async function getAllProducts(
   req: RollingTypes.Request,
@@ -26,6 +27,7 @@ export async function getAllProducts(
 export async function createNewProduct(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
   const { category, name, description } = req.body;
 
   const product: RollingTypes.ProductWithoutVariants = {
@@ -39,12 +41,19 @@ export async function createNewProduct(
   };
   await ProductDAL.createProduct(product);
 
+  Logger.logToDb(
+    "product created",
+    `product with category:${category} and name:${name}`,
+    uid,
+  );
+
   return new RollingResponse("product created");
 }
 
 export async function createNewVariation(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
   const productId = req.params["productId"];
 
   const product = await ProductDAL.findProductById(productId);
@@ -60,6 +69,12 @@ export async function createNewVariation(
     product.totalSKU,
     productId,
     price,
+  );
+
+  Logger.logToDb(
+    "product variant created",
+    `product variant for productId ${productId}`,
+    uid,
   );
 
   return new RollingResponse("variant created");
@@ -109,8 +124,15 @@ export async function updateVariant(
 export async function deleteProduct(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
   const productId = req.params["productId"];
 
   await ProductDAL.deleteProductById(productId);
+
+  Logger.logToDb(
+    "product deleted",
+    `product with productId: ${productId}`,
+    uid,
+  );
   return new RollingResponse("product deleted");
 }

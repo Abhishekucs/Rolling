@@ -1,5 +1,7 @@
 type ExpressRequest = import("express").Request;
 
+type AddField<T, K extends string, V> = Partial<T> & { [P in K]: V };
+
 declare namespace RollingTypes {
   interface DecodedToken {
     type: "Bearer" | "None";
@@ -10,10 +12,16 @@ declare namespace RollingTypes {
   interface Configuration {
     maintenance: boolean;
     users: {
-      signup: boolean;
+      signUp: boolean;
     };
     admin: {
       endpointsEnabled: boolean;
+    };
+    product: {
+      submissionEnabled: boolean;
+    };
+    address: {
+      submissionEnabled: boolean;
     };
     rateLimiting: {
       badAuthentication: {

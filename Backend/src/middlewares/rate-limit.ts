@@ -35,8 +35,7 @@ const ONE_HOUR_MS = 1000 * ONE_HOUR_SECONDS;
 export const rootRateLimiter = rateLimit({
   windowMs: ONE_HOUR_MS,
   limit: 1000 * REQUEST_MULTIPLIER,
-  standardHeaders: "draft-7", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  keyGenerator: getKeyWithUid,
   handler: (_req, _res, _next, _options): void => {
     throw new RollingError(
       429,
@@ -106,7 +105,7 @@ export const adminLimit = rateLimit({
 
 // Users Routing
 export const userGet = rateLimit({
-  windowMs: ONE_HOUR_MS,
+  windowMs: ONE_HOUR_MS, // 1 hour
   limit: 60 * REQUEST_MULTIPLIER,
   keyGenerator: getKeyWithUid,
   handler: customHandler,
@@ -119,6 +118,13 @@ export const userSignup = rateLimit({
   handler: customHandler,
 });
 
+export const userUpdateName = rateLimit({
+  windowMs: 24 * ONE_HOUR_MS, // 1 day
+  limit: 3 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
 export const userDelete = rateLimit({
   windowMs: 24 * ONE_HOUR_MS, // 1 day
   limit: 3 * REQUEST_MULTIPLIER,
@@ -127,22 +133,92 @@ export const userDelete = rateLimit({
 });
 
 export const userRequestVerificationEmail = rateLimit({
-  windowMs: ONE_HOUR_MS / 4,
+  windowMs: ONE_HOUR_MS / 4, // 15 min
   limit: 1 * REQUEST_MULTIPLIER,
   keyGenerator: getKeyWithUid,
   handler: customHandler,
 });
 
 export const userForgotPasswordEmail = rateLimit({
-  windowMs: ONE_HOUR_MS / 4,
+  windowMs: ONE_HOUR_MS / 4, // 15 min
   limit: 1 * REQUEST_MULTIPLIER,
   keyGenerator: getKeyWithUid,
   handler: customHandler,
 });
 
 export const userRevokeAllTokens = rateLimit({
+  windowMs: ONE_HOUR_MS, // 1 hour
+  limit: 10 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+// Address Routing
+export const addressGetAll = rateLimit({
+  windowMs: ONE_HOUR_MS,
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const addressAdd = rateLimit({
   windowMs: ONE_HOUR_MS,
   limit: 10 * REQUEST_MULTIPLIER,
   keyGenerator: getKeyWithUid,
   handler: customHandler,
 });
+
+export const addressUpdate = rateLimit({
+  windowMs: ONE_HOUR_MS,
+  limit: 10 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const addressDelete = rateLimit({
+  windowMs: ONE_HOUR_MS,
+  limit: 10 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+//Product Routing
+
+export const productGetAll = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const productAdd = rateLimit({
+  windowMs: ONE_HOUR_MS,
+  limit: 60 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const productDelete = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const productAddVariant = productAdd;
+
+export const productGetById = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const productUpdate = rateLimit({
+  windowMs: ONE_HOUR_MS,
+  limit: 60 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const productVariantUpdate = productUpdate;

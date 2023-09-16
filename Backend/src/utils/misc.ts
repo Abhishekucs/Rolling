@@ -12,6 +12,14 @@ export function getOrder(value: string): OrderByDirection {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function identity(value: any): string {
+  return Object.prototype.toString
+    .call(value)
+    .replace(/^\[object\s+([a-z]+)\]$/i, "$1")
+    .toLowerCase();
+}
+
 export function updateRecordArray(
   firstArray: Record<string, number>[],
   secondArray: Record<string, number>[],

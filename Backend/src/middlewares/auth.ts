@@ -5,6 +5,7 @@ import { verifyIdToken } from "../utils/auth";
 interface RequestAuthenticationOptions {
   isPublic?: boolean;
   requireFreshToken?: boolean;
+  noCache?: boolean;
 }
 
 const DEFAULT_OPTIONS: RequestAuthenticationOptions = {
@@ -115,7 +116,7 @@ async function authenticateWithBearerToken(
   try {
     const decodedToken = await verifyIdToken(
       token,
-      //options.requireFreshToken // options.requireFreshToken || options.noCache cache need to be implemented here
+      options.requireFreshToken || options.noCache,
     );
 
     if (options.requireFreshToken) {

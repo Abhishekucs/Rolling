@@ -10,6 +10,35 @@ import multer from "multer";
 import { isAdmin } from "../dal/admin";
 import fs from "fs";
 
+interface ValidationOptions<T> {
+  criteria: (data: T) => boolean;
+  invalidMessage?: string;
+}
+
+/**
+ * This utility checks that the server's configuration matches
+ * the criteria.
+ */
+function validateConfiguration(
+  options: ValidationOptions<RollingTypes.Configuration>,
+): RequestHandler {
+  const {
+    criteria,
+    invalidMessage = "This service is currently unavailable.",
+  } = options;
+
+  return (req: RollingTypes.Request, _res: Response, next: NextFunction) => {
+    const configuration = req.ctx.configuration;
+
+    const validated = criteria(configuration);
+    if (!validated) {
+      throw new RollingError(503, invalidMessage);
+    }
+
+    next();
+  };
+}
+
 const emptyMiddleware = (
   _req: RollingTypes.Request,
   _res: Response,
@@ -84,6 +113,10 @@ function validateRequest(validationSchema: ValidationSchema): RequestHandler {
   };
 }
 
+/** This middleware is used to handle images from the request
+ * (When number of files exceed the maxCount the error is Unexpected Field)
+ */
+
 function handleImage(): RequestHandler {
   const directoryPath = "/tmp/uploads";
 
@@ -122,11 +155,10 @@ function handleImage(): RequestHandler {
   return (req: RollingTypes.Request, res: Response, next: NextFunction) => {
     // return upload.array("images", 5);
 
-    upload.array("images", 5)(req, res, (err: Error | string) => {
-      if (err instanceof Error) {
-        return next(err);
-      } else if (typeof err == "string") {
-        return next(new RollingError(400, err));
+    // @ts-nocheck
+    upload.array("images", 5)(req, res, (err: unknown) => {
+      if (err) {
+        next(err);
       } else {
         next();
       }
@@ -174,4 +206,5 @@ export {
   handleImage,
   checkIfUserIsAdmin,
   useInProduction,
+  validateConfiguration,
 };

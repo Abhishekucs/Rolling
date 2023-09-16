@@ -5,10 +5,12 @@ import {
   asyncHandler,
   checkIfUserIsAdmin,
   handleImage,
+  validateConfiguration,
   validateRequest,
 } from "../middlewares/api-utils";
 import * as ProductController from "../controllers/product";
 import { isValidUuidV4 } from "../utils/validation";
+import * as RateLimit from "../middlewares/rate-limit";
 
 const router = Router();
 
@@ -53,6 +55,7 @@ router.get(
   authenticateRequest({
     isPublic: true,
   }),
+  RateLimit.productGetAll,
   validateRequest({
     query: PRODUCT_VALIDATION_SCHEMA_WITH_LIMIT,
   }),
@@ -61,7 +64,14 @@ router.get(
 
 router.post(
   "/",
+  validateConfiguration({
+    criteria: (configuration) => {
+      return configuration.product.submissionEnabled;
+    },
+    invalidMessage: "Product Submission is temporarily disabled",
+  }),
   authenticateRequest(),
+  RateLimit.productAdd,
   validateRequest({
     body: {
       category: joi.string().valid("tshirt", "hoodie").required(),
@@ -76,6 +86,7 @@ router.post(
 router.post(
   "/:productId/variant",
   authenticateRequest(),
+  RateLimit.productAddVariant,
   handleImage(),
   validateRequest({
     body: {
@@ -96,6 +107,7 @@ router.get(
   authenticateRequest({
     isPublic: true,
   }),
+  RateLimit.productGetById,
   validateRequest({
     params: {
       productId: idValidation,
@@ -107,6 +119,7 @@ router.get(
 router.patch(
   "/:productId",
   authenticateRequest(),
+  RateLimit.productUpdate,
   validateRequest({
     body: {
       name: joi.string().min(1),
@@ -121,6 +134,7 @@ router.patch(
 router.patch(
   "/:productId/variant/:variantId",
   authenticateRequest(),
+  RateLimit.productVariantUpdate,
   handleImage(),
   validateRequest({
     body: {
@@ -141,6 +155,7 @@ router.delete(
   authenticateRequest({
     requireFreshToken: true,
   }),
+  RateLimit.productDelete,
   validateRequest({
     params: {
       productId: idValidation,

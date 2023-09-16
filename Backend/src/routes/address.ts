@@ -8,8 +8,13 @@ import {
 } from "../utils/validation";
 import Joi from "joi";
 import { authenticateRequest } from "../middlewares/auth";
-import { asyncHandler, validateRequest } from "../middlewares/api-utils";
+import {
+  asyncHandler,
+  validateConfiguration,
+  validateRequest,
+} from "../middlewares/api-utils";
 import * as AddressController from "../controllers/address";
+import * as RateLimit from "../middlewares/rate-limit";
 
 const router = Router();
 
@@ -75,12 +80,20 @@ const addressIdValidation = Joi.string()
 router.get(
   "/",
   authenticateRequest(),
+  RateLimit.addressGetAll,
   asyncHandler(AddressController.getAllAddress),
 );
 
 router.post(
   "/",
+  validateConfiguration({
+    criteria: (configuration) => {
+      return configuration.address.submissionEnabled;
+    },
+    invalidMessage: "Address Submission is temporarily disabled",
+  }),
   authenticateRequest(),
+  RateLimit.addressAdd,
   validateRequest({
     body: {
       uid: Joi.string().token(),
@@ -101,6 +114,7 @@ router.post(
 router.patch(
   "/:id",
   authenticateRequest(),
+  RateLimit.addressUpdate,
   validateRequest({
     body: {
       uid: Joi.string().token(),
@@ -126,6 +140,7 @@ router.delete(
   authenticateRequest({
     requireFreshToken: true,
   }),
+  RateLimit.addressDelete,
   validateRequest({
     params: {
       id: addressIdValidation,

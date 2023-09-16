@@ -6,6 +6,7 @@ import { deleteAllAddress } from "../dal/address";
 import admin from "firebase-admin";
 import emailQueue from "../queues/email-queue";
 import { UserRecord } from "firebase-admin/lib/auth/user-record";
+import Logger from "../utils/logger";
 
 export async function getUser(
   req: RollingTypes.Request,
@@ -48,6 +49,7 @@ export async function createNewUser(
   const { name } = req.body;
 
   await UserDAL.addUser(name, email, uid);
+  Logger.logToDb("user_created", `${name} ${email}`, uid);
 
   return new RollingResponse("User created");
 }
@@ -62,6 +64,12 @@ export async function updateUserName(
 
   await UserDAL.updateUser(name, user.name, uid);
 
+  Logger.logToDb(
+    "user_name_updated",
+    `changed name from ${user.name} to ${name}`,
+    uid,
+  );
+
   return new RollingResponse("User Name Updated");
 }
 
@@ -70,8 +78,10 @@ export async function deleteUser(
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
 
-  await UserDAL.getUser(uid, "delete user");
+  const userInfo = await UserDAL.getUser(uid, "delete user");
   await Promise.all([deleteAllAddress(uid), UserDAL.deleteUser(uid)]);
+
+  Logger.logToDb("user_deleted", `${userInfo.email} ${userInfo.name}`, uid);
 
   return new RollingResponse("User deleted");
 }
@@ -174,4 +184,12 @@ export async function sendForgotPasswordEmail(
   await emailQueue.sendForgotPasswordEmail(email, userInfo.name, link);
 
   return new RollingResponse("Email sent if user was found");
+}
+
+export async function revokeAllTokens(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
+  await FirebaseAdmin().auth().revokeRefreshTokens(uid);
+  return new RollingResponse("All tokens revoked");
 }

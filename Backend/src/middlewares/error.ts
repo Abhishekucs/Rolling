@@ -7,6 +7,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import Logger from "../utils/logger";
 import { MulterError } from "multer";
+import { incrementBadAuth } from "./rate-limit";
 
 async function errorHandlingMiddleware(
   error: Error,
@@ -29,8 +30,8 @@ async function errorHandlingMiddleware(
       rollingResponse.message =
         "Could not connect to the database. It may be down.";
     } else if (error instanceof MulterError) {
-      rollingResponse.status = 400;
-      rollingResponse.message = error.message;
+      rollingResponse.status = 500;
+      rollingResponse.message = `Message: ${error.message} -- Field: ${error.field}`;
     } else if (error instanceof URIError || error instanceof SyntaxError) {
       rollingResponse.status = 400;
       rollingResponse.message = "Unprocessable request";
@@ -40,6 +41,12 @@ async function errorHandlingMiddleware(
     } else {
       rollingResponse.message = `Oops! We kept Rolling. Please try again later. - ${rollingResponse.data.errorId}`;
     }
+
+    await incrementBadAuth(req, res, rollingResponse.status);
+
+    // if (rollingResponse.status >= 400 && rollingResponse.status < 500) {
+    // 	recordClientErrorByVersion(req.headers["x-client-version"] as string);
+    //   }
 
     if (rollingResponse.status < 500) {
       delete rollingResponse.data["errorId"];

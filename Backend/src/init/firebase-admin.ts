@@ -29,6 +29,7 @@ export function init(): void {
         flag: "r",
       }),
     );
+
     admin.initializeApp({
       credential: admin.credential.cert(
         serviceAccount as unknown as ServiceAccount,

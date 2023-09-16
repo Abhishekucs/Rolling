@@ -1,9 +1,9 @@
-import FirebaseAdmin from "../init/firebase-admin";
 import _ from "lodash";
 import RollingError from "../utils/error";
+import * as db from "../init/db";
 
-export function getUserCollection(): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
-  return FirebaseAdmin().firestore().collection("users");
+export function getUserCollection(): FirebaseFirestore.CollectionReference<RollingTypes.User> {
+  return db.collection<RollingTypes.User>("users");
 }
 
 export async function getUser(
@@ -12,7 +12,9 @@ export async function getUser(
 ): Promise<RollingTypes.User> {
   const userRef = getUserCollection();
   const userDoc = await userRef.doc(uid).get();
-  if (!userDoc.exists) throw new RollingError(404, "User not found", stack);
+  if (!userDoc.exists) {
+    throw new RollingError(404, "User not found", stack);
+  }
 
   return userDoc.data() as RollingTypes.User;
 }
