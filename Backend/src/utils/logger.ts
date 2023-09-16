@@ -12,14 +12,6 @@ const infoColor = chalk.white;
 const logFolderPath = process.env.LOG_FOLDER_PATH ?? "./logs";
 const maxLogSize = parseInt(process.env.LOG_FILE_MAX_SIZE ?? "10485760");
 
-interface Log {
-  type?: string;
-  timestamp: number;
-  uid: string;
-  event: string;
-  message: string;
-}
-
 const customLevels = {
   error: 0,
   warning: 1,
@@ -91,11 +83,11 @@ const logToDb = async (
   message: any,
   uid?: string,
 ): Promise<void> => {
-  const logsCollection = db.collection<Log>("logs");
+  const logsCollection = db.collection<RollingTypes.Log>("logs");
 
   logger.info(`${event}\t${uid}\t${JSON.stringify(message)}`);
   const logId = uuidV4();
-  logsCollection
+  await logsCollection
     .doc(logId)
     .set({
       timestamp: Date.now(),

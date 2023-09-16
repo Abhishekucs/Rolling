@@ -9,6 +9,14 @@ declare namespace RollingTypes {
     email: string;
   }
 
+  interface Log {
+    type?: string;
+    timestamp: number;
+    uid: string;
+    event: string;
+    message: string;
+  }
+
   interface Configuration {
     maintenance: boolean;
     users: {
@@ -92,4 +100,22 @@ declare namespace RollingTypes {
   }
 
   type ProductWithoutVariants = Omit<RollingTypes.Product, "variants">;
+
+  interface CartItem {
+    productId: string;
+    variantId: string;
+    size: number;
+    quantity: number;
+    price: number;
+  }
+
+  interface Cart {
+    cartId: string;
+    products: CartItem[];
+    userId: string;
+    totalQuantity: number;
+    totalPrice: number;
+    createdAt: number;
+    modifiedAt: number;
+  }
 }

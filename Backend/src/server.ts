@@ -7,6 +7,8 @@ import * as RedisClient from "./init/redis";
 import queues from "./queues";
 import workers from "./workers";
 import * as EmailClient from "./init/email-client";
+import jobs from "./jobs";
+import { getLiveConfiguration } from "./init/configuration";
 
 async function bootserver(port: number): Promise<Server> {
   try {
@@ -14,6 +16,10 @@ async function bootserver(port: number): Promise<Server> {
 
     Logger.info("Initializing Firebase app instance...");
     initFirebaseAdmin();
+
+    Logger.info("Fetching live configuration...");
+    await getLiveConfiguration();
+    Logger.success("Live configuration fetched");
 
     Logger.info("Initializing email client...");
     EmailClient.init();
@@ -44,6 +50,10 @@ async function bootserver(port: number): Promise<Server> {
           .map((worker) => worker(connection).name)
           .join(", ")}`,
       );
+
+      Logger.info("Starting cron jobs...");
+      jobs.forEach((job) => job.start());
+      Logger.success("Cron jobs started");
     }
   } catch (error) {
     Logger.error("Failed to boot server");
@@ -57,6 +67,6 @@ async function bootserver(port: number): Promise<Server> {
   });
 }
 
-const PORT = parseInt(process.env.PORT ?? "4000");
+const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
 bootserver(PORT);
