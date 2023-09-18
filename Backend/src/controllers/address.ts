@@ -29,50 +29,21 @@ export async function createNewAddress(
     defaultAddress,
   } = req.body;
 
-  let address: RollingTypes.Address;
   const addressId = uuidv4();
-
-  try {
-    const allAddress = await AddressDAL.getAllAddress(uid, "createNewAddress");
-    if (defaultAddress) {
-      _.forEach(allAddress, async (address) => {
-        const updatedAddress: RollingTypes.Address = {
-          ...address,
-          defaultAddress: false,
-        };
-        await AddressDAL.updateAddressbyId(updatedAddress, uid);
-      });
-    }
-    address = {
-      addressId,
-      name,
-      address1,
-      address2,
-      landmark,
-      state,
-      city,
-      mobileNumber,
-      pincode,
-      defaultAddress,
-    };
-  } catch (error) {
-    if (error.status === 404) {
-      address = {
-        addressId,
-        name,
-        address1,
-        address2,
-        landmark,
-        state,
-        city,
-        mobileNumber,
-        pincode,
-        defaultAddress: true,
-      };
-    } else {
-      throw error;
-    }
-  }
+  const address: RollingTypes.Address = {
+    address1,
+    address2,
+    addressId,
+    name,
+    landmark,
+    state,
+    city,
+    mobileNumber,
+    pincode,
+    defaultAddress,
+    createdAt: Date.now(),
+    modifiedAt: Date.now(),
+  };
 
   await AddressDAL.addAddress(address, uid);
 
@@ -97,21 +68,10 @@ export async function updateAddress(
 
   const addressId = req.params["id"];
 
-  if (defaultAddress) {
-    const allAddress = await AddressDAL.getAllAddress(uid, "createNewAddress");
+  const address = await AddressDAL.getAddressById(uid, addressId);
 
-    _.forEach(allAddress, async (address) => {
-      if (address.addressId !== addressId) {
-        const updatedAddress: RollingTypes.Address = {
-          ...address,
-          defaultAddress: false,
-        };
-        await AddressDAL.updateAddressbyId(updatedAddress, uid);
-      }
-    });
-  }
-
-  const newUpdatedAddress: RollingTypes.Address = {
+  const updatedAddress: RollingTypes.Address = {
+    ...address,
     addressId,
     name,
     address1,
@@ -122,9 +82,10 @@ export async function updateAddress(
     mobileNumber,
     pincode,
     defaultAddress,
+    modifiedAt: Date.now(),
   };
 
-  await AddressDAL.updateAddressbyId(newUpdatedAddress, uid);
+  await AddressDAL.updateAddress(uid, updatedAddress);
 
   return new RollingResponse("Address Updated");
 }

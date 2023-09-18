@@ -222,3 +222,27 @@ export const productUpdate = rateLimit({
 });
 
 export const productVariantUpdate = productUpdate;
+
+// Cart Routing
+export const cartAdd = rateLimit({
+  windowMs: 60 * 1000, // 1 min
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const cartGet = rateLimit({
+  windowMs: ONE_HOUR_MS, // 1 hour
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
+export const cartItemDelete = cartAdd;
+
+export const cartUpdateItem = rateLimit({
+  windowMs: 60 * 1000, // 1 min
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});

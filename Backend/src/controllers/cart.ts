@@ -3,73 +3,96 @@ import _ from "lodash";
 import * as CartDAL from "../dal/cart";
 import { v4 as uuidv4 } from "uuid";
 import Logger from "../utils/logger";
+import RollingError from "../utils/error";
 
 export async function addToCart(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
-  const { productId, variantId, price, quantity, size } = req.body;
+  const { productId, variantId, price, quantity, size, name } = req.body;
 
-  const cart = await CartDAL.getCartByUserId(uid);
+  try {
+    const cart = await CartDAL.getCart(uid);
 
-  if (cart) {
-    const productIndex = _.findIndex(cart.products, { productId });
-    let totalPrice = 0;
-    if (productIndex > -1) {
+    const productIndex = _.findIndex(cart, { variantId });
+
+    if (productIndex > -1 && cart[productIndex].size === (size as string)) {
       //product exists in the cart, update the quantity
-      const cartItem = cart.products[productIndex];
-      cartItem.quantity = parseInt(quantity as string, 10);
-      cart.products[productIndex] = cartItem;
+
+      let productQuantity = parseInt(quantity as string, 10);
+      productQuantity = productQuantity + cart[productIndex].quantity;
+      const cartItem = cart[productIndex];
+
+      await CartDAL.updateCartItem(uid, cartItem._id, {
+        quantity: productQuantity,
+      });
     } else {
       //product does not exists in cart, add new item
+
+      // get product variant from database and update the imageurl
       const item: RollingTypes.CartItem = {
+        _id: uuidv4(),
         productId,
         variantId,
-        price,
-        quantity,
+        price: parseInt(price as string, 10),
+        quantity: parseInt(quantity as string, 10),
         size,
+        productName: name,
+        imageUrl: "",
       };
-      cart.products.push(item);
+
+      await CartDAL.createCartItem(uid, item);
+    }
+    return new RollingResponse("cart created");
+  } catch (error) {
+    if (error instanceof RollingError) {
+      if (error.message === "cart is empty") {
+        // cart doesnot exists for user , create new cart
+        const item: RollingTypes.CartItem = {
+          _id: uuidv4(),
+          productId,
+          variantId,
+          price: parseInt(price as string, 10),
+          quantity: parseInt(quantity as string, 10),
+          size,
+          productName: name,
+          imageUrl: "",
+        };
+
+        await CartDAL.createCartItem(uid, item);
+
+        Logger.logToDb(
+          "addToCart",
+          `${uid} added product with ${productId}`,
+          uid,
+        );
+
+        return new RollingResponse("cart created");
+      }
     }
 
-    _.forEach(cart.products, (item) => {
-      totalPrice = totalPrice + item.price * item.quantity;
+    throw error;
+  }
+}
+
+export async function updateItem(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const { uid } = req.ctx.decodedToken;
+  const { quantity, size } = req.body;
+  const cartItemId = req.params["cartItemId"];
+
+  if (quantity) {
+    await CartDAL.updateCartItem(uid, cartItemId, {
+      quantity: parseInt(quantity as string, 10),
     });
-
-    const updatedCart: RollingTypes.Cart = {
-      ...cart,
-      totalQuantity: cart.products.length,
-      totalPrice,
-      modifiedAt: Date.now(),
-    };
-
-    await CartDAL.updateCart(updatedCart);
-  } else {
-    // cart doesnot exists for user , create new cart
-    const item: RollingTypes.CartItem = {
-      productId,
-      variantId,
-      price,
-      quantity,
-      size,
-    };
-
-    const newCart: RollingTypes.Cart = {
-      cartId: uuidv4(),
-      createdAt: Date.now(),
-      modifiedAt: Date.now(),
-      products: [item],
-      totalPrice: price * quantity,
-      totalQuantity: 1,
-      userId: uid,
-    };
-
-    await CartDAL.createCart(newCart);
   }
 
-  Logger.logToDb("addToCart", `${uid} added product with ${productId}`, uid);
+  if (size) {
+    await CartDAL.updateCartItem(uid, cartItemId, { size });
+  }
 
-  return new RollingResponse("cart created");
+  return new RollingResponse("updated successfully");
 }
 
 export async function getCart(
@@ -77,10 +100,7 @@ export async function getCart(
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
 
-  const cart = await CartDAL.getCartByUserId(uid);
-  if ((cart && cart.products.length === 0) || cart === null) {
-    return new RollingResponse("Cart is empty");
-  }
+  const cart = await CartDAL.getCart(uid);
 
   return new RollingResponse("cart retrived", cart);
 }
@@ -89,34 +109,11 @@ export async function deleteProduct(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {
   const { uid } = req.ctx.decodedToken;
-  const productId = req.params["productId"];
+  const cartItemid = req.params["cartItemid"];
 
-  const cart = await CartDAL.getCartByUserId(uid);
+  await CartDAL.deleteCartItem(uid, cartItemid);
 
-  if (cart) {
-    const productIndex = _.findIndex(cart.products, { productId });
-    const product = cart.products[productIndex];
-    const totalQuantity = cart.totalQuantity - 1;
-    const totalPrice = cart.totalPrice - product.price * product.quantity;
-
-    _.pullAt(cart.products, productIndex);
-
-    if (cart.products.length === 0) {
-      await CartDAL.deleteCart(cart.cartId);
-    } else {
-      const updatedCart: RollingTypes.Cart = {
-        ...cart,
-        modifiedAt: Date.now(),
-        totalPrice,
-        totalQuantity,
-        products: cart.products,
-      };
-
-      await CartDAL.updateCart(updatedCart);
-    }
-  }
-
-  Logger.logToDb("delete_cart_item", `${productId} is deleted`, uid);
+  Logger.logToDb("delete_cart_item", `${cartItemid} is deleted`, uid);
 
   return new RollingResponse("item deleted");
 }

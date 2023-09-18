@@ -1,33 +1,50 @@
-import * as db from "../init/db";
+import _ from "lodash";
+import RollingError from "../utils/error";
 import Logger from "../utils/logger";
+import * as db from "../init/db";
 
-function getCartCollection(): FirebaseFirestore.CollectionReference<RollingTypes.Cart> {
-  return db.collection<RollingTypes.Cart>("cart");
+function getCartCollection(
+  uid: string,
+): FirebaseFirestore.CollectionReference<RollingTypes.CartItem> {
+  return db.collection<RollingTypes.CartItem>(`users/${uid}/cart`);
 }
 
-export async function getCartByUserId(
-  userId: string,
-): Promise<RollingTypes.Cart | null> {
-  const query = getCartCollection().where("userId", "==", userId);
+export async function getCart(uid: string): Promise<RollingTypes.CartItem[]> {
+  const query = getCartCollection(uid);
   const snapshot = await query.get();
 
-  if (snapshot.empty || snapshot.size === 0) {
-    return null;
+  if (snapshot.empty) {
+    throw new RollingError(404, "cart is empty");
   }
 
-  Logger.logToDb("getCartByUserId", `${userId} request Cart`, userId);
-
-  return snapshot.docs[0].data();
+  const docs = snapshot.docs;
+  const cart = _.map(docs, (doc) => doc.data());
+  return cart;
 }
 
-export async function createCart(cart: RollingTypes.Cart): Promise<void> {
-  await getCartCollection().doc(cart.cartId).set(cart);
+export async function createCartItem(
+  uid: string,
+  cartItem: RollingTypes.CartItem,
+): Promise<void> {
+  await getCartCollection(uid).doc(cartItem._id).set(cartItem);
+
+  Logger.logToDb("create_cart", `Cart created`, uid);
 }
 
-export async function updateCart(cart: RollingTypes.Cart): Promise<void> {
-  await getCartCollection().doc(cart.cartId).update(cart);
+export async function updateCartItem(
+  uid: string,
+  cartItemId: string,
+  item: Partial<RollingTypes.CartItem>,
+): Promise<void> {
+  await getCartCollection(uid)
+    .doc(cartItemId)
+    .update({ ...item });
 }
 
-export async function deleteCart(cartId: string): Promise<void> {
-  await getCartCollection().doc(cartId).delete();
+export async function deleteCartItem(
+  uid: string,
+  cartId: string,
+): Promise<void> {
+  Logger.logToDb("delete_cart", `Cart deleted`, uid);
+  await getCartCollection(uid).doc(cartId).delete();
 }

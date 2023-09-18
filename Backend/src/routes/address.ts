@@ -96,7 +96,6 @@ router.post(
   RateLimit.addressAdd,
   validateRequest({
     body: {
-      uid: Joi.string().token(),
       name: nameValidation,
       address1: addressValidation,
       address2: addressValidation,
@@ -104,7 +103,7 @@ router.post(
       pincode: pincodeValidaton,
       state: Joi.string().required(),
       city: Joi.string().required(),
-      defaultAddress: Joi.boolean(),
+      defaultAddress: Joi.boolean().required(),
       mobileNumber: mobileNumberValidation,
     },
   }),
@@ -117,7 +116,6 @@ router.patch(
   RateLimit.addressUpdate,
   validateRequest({
     body: {
-      uid: Joi.string().token(),
       name: nameValidation,
       address1: addressValidation,
       address2: addressValidation,
@@ -125,7 +123,7 @@ router.patch(
       pincode: pincodeValidaton,
       state: Joi.string().required(),
       city: Joi.string().required(),
-      defaultAddress: Joi.boolean(),
+      defaultAddress: Joi.boolean().required(),
       mobileNumber: mobileNumberValidation,
     },
     params: {

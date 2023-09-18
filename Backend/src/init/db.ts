@@ -33,3 +33,18 @@ export function collectionGroup<T extends DocumentData>(
     .collectionGroup(collectionGroupName)
     .withConverter(converter<T>());
 }
+
+export function batch(): FirebaseFirestore.WriteBatch {
+  return FirebaseAdmin().firestore().batch();
+}
+
+export function transaction<T>(
+  updateFunction: (transaction: FirebaseFirestore.Transaction) => Promise<T>,
+  transactionOptions?:
+    | FirebaseFirestore.ReadWriteTransactionOptions
+    | FirebaseFirestore.ReadOnlyTransactionOptions,
+): Promise<T> {
+  return FirebaseAdmin()
+    .firestore()
+    .runTransaction<T>(updateFunction, transactionOptions);
+}

@@ -11,6 +11,7 @@ import users from "./users";
 import address from "./address";
 import product from "./product";
 import cart from "./cart";
+import order from "./order";
 import { RollingResponse } from "../utils/rolling-response";
 import { asyncHandler } from "../middlewares/api-utils";
 import configuration from "./configuration";
@@ -26,6 +27,7 @@ const API_ROUTE_MAP = {
   "/address": address,
   "/product": product,
   "/cart": cart,
+  "/order": order,
 };
 
 function addApiRoutes(app: Application): void {

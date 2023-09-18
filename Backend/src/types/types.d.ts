@@ -59,7 +59,9 @@ declare namespace RollingTypes {
     city: string;
     state: string;
     mobileNumber: number;
-    defaultAddress?: boolean;
+    defaultAddress: boolean;
+    createdAt: number;
+    modifiedAt: number;
   }
 
   interface User {
@@ -102,20 +104,51 @@ declare namespace RollingTypes {
   type ProductWithoutVariants = Omit<RollingTypes.Product, "variants">;
 
   interface CartItem {
+    _id: string;
     productId: string;
     variantId: string;
-    size: number;
+    productName: string;
+    size: ProductSize;
     quantity: number;
     price: number;
+    imageUrl: string;
   }
 
-  interface Cart {
-    cartId: string;
+  type OrderStatus = "created" | "attempted" | "paid" | "cancelled" | "none";
+  type PaymentMethod =
+    | "card"
+    | "netbanking"
+    | "wallet"
+    | "emi"
+    | "upi"
+    | "none";
+  type PaymentStatus =
+    | "created"
+    | "authorized"
+    | "captured"
+    | "refunded"
+    | "failed"
+    | "none";
+
+  interface OrderContact {
+    mobileNumber: number;
+    email: string;
+  }
+
+  interface Order {
+    orderId: string;
+    amount: number;
+    totalItems: number;
     products: CartItem[];
-    userId: string;
-    totalQuantity: number;
-    totalPrice: number;
     createdAt: number;
     modifiedAt: number;
+    paymentAttempts: number;
+    status: OrderStatus;
+    address: Address;
+    paymentMethod: PaymentMethod;
+    paymentStatus: PaymentStatus;
+    tax: number;
+    paymentId: string;
+    contact: OrderContact;
   }
 }
