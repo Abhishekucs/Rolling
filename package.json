@@ -10,6 +10,7 @@
     "dev": "concurrently --kill-others \"npm run dev-fe\" \"npm run dev-be\"",
     "dev-be": "cd backend && npm run dev",
     "dev-fe": "cd frontend && npm run dev",
+    "test-be": "cd backend && npm run test",
     "pretty": "prettier --check \"./backend/**/*.{ts,json,js,css,html}\" \"./frontend/**/*.{ts,js,css,scss}\"",
     "pretty-code": "prettier --check \"./backend/**/*.{ts,js,json,css,html}\" \"./frontend/**/*.{ts,js}\" \"./frontend/src/**/*.css\"",
     "pretty-code-be": "prettier --check \"./backend/**/*.{ts,js,json,css,html}\"",
