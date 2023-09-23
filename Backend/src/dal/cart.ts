@@ -2,49 +2,74 @@ import _ from "lodash";
 import RollingError from "../utils/error";
 import Logger from "../utils/logger";
 import * as db from "../init/db";
+import { Collection, ObjectId } from "mongodb";
 
-function getCartCollection(
-  uid: string,
-): FirebaseFirestore.CollectionReference<RollingTypes.CartItem> {
-  return db.collection<RollingTypes.CartItem>(`users/${uid}/cart`);
+function getCartCollection(): Collection<RollingTypes.Cart> {
+  return db.collection<RollingTypes.Cart>("cart");
 }
 
-export async function getCart(uid: string): Promise<RollingTypes.CartItem[]> {
-  const query = getCartCollection(uid);
-  const snapshot = await query.get();
-
-  if (snapshot.empty) {
-    throw new RollingError(404, "cart is empty");
-  }
-
-  const docs = snapshot.docs;
-  const cart = _.map(docs, (doc) => doc.data());
+export async function getCart(uid: string): Promise<RollingTypes.Cart> {
+  const cart = await getCartCollection().findOne({ uid });
+  if (!cart) throw new RollingError(404, "cart not found", "getCart");
   return cart;
 }
 
-export async function createCartItem(
+export async function createCart(
   uid: string,
-  cartItem: RollingTypes.CartItem,
+  cart: RollingTypes.Cart,
 ): Promise<void> {
-  await getCartCollection(uid).doc(cartItem._id).set(cartItem);
+  await getCartCollection().updateOne(
+    { uid },
+    { $setOnInsert: cart },
+    { upsert: true },
+  );
 
   Logger.logToDb("create_cart", `Cart created`, uid);
+}
+
+export async function updateCart(
+  uid: string,
+  cart: RollingTypes.Cart,
+): Promise<void> {
+  await getCartCollection().updateOne(
+    { uid },
+    { $set: { ...cart, modifiedAt: Date.now() } },
+  );
 }
 
 export async function updateCartItem(
   uid: string,
   cartItemId: string,
-  item: Partial<RollingTypes.CartItem>,
+  size: RollingTypes.ProductSize,
+  quantity: number,
 ): Promise<void> {
-  await getCartCollection(uid)
-    .doc(cartItemId)
-    .update({ ...item });
+  const cart = await getCart(uid);
+  const itemIndex = _.findIndex(cart.items, { _id: new ObjectId(cartItemId) });
+
+  if (itemIndex > -1) {
+    cart.items[itemIndex].size = size;
+    cart.items[itemIndex].quantity = quantity;
+
+    let updatedprice = 0;
+    _.forEach(cart.items, (item) => {
+      updatedprice = updatedprice + item.price * item.quantity;
+    });
+
+    cart.totalPrice = updatedprice;
+    cart.modifiedAt = Date.now();
+  } else {
+    throw new RollingError(404, "cart item not found", "updateCartItem");
+  }
+
+  await updateCart(uid, cart);
 }
 
 export async function deleteCartItem(
   uid: string,
   cartId: string,
 ): Promise<void> {
-  Logger.logToDb("delete_cart", `Cart deleted`, uid);
-  await getCartCollection(uid).doc(cartId).delete();
+  await getCartCollection().updateOne(
+    { uid },
+    { $pull: { items: { _id: new ObjectId(cartId) } }, $set: {} },
+  );
 }

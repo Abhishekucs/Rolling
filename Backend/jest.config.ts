@@ -5,6 +5,9 @@ const jestConfig: JestConfigWithTsJest = {
   transform: {
     ...tsjPreset.transform,
   },
+  setupFilesAfterEnv: ["<rootDir>/__tests__/setup-tests.ts"],
+  modulePathIgnorePatterns: ["<rootDir>/__tests__/setup-tests.ts"],
+  clearMocks: true,
 };
 
 export default jestConfig;

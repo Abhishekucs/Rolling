@@ -1,9 +1,10 @@
 import { RollingResponse } from "../utils/rolling-response";
 import _ from "lodash";
 import * as CartDAL from "../dal/cart";
-import { v4 as uuidv4 } from "uuid";
 import Logger from "../utils/logger";
 import RollingError from "../utils/error";
+import { ObjectId } from "mongodb";
+import { getProductById } from "../dal/product";
 
 export async function addToCart(
   req: RollingTypes.Request,
@@ -14,58 +15,105 @@ export async function addToCart(
   try {
     const cart = await CartDAL.getCart(uid);
 
-    const productIndex = _.findIndex(cart, { variantId });
+    const productIndex = _.findIndex(cart.items, {
+      variantId,
+    });
 
-    if (productIndex > -1 && cart[productIndex].size === (size as string)) {
+    if (
+      productIndex > -1 &&
+      cart.items[productIndex].size === (size as string)
+    ) {
       //product exists in the cart, update the quantity
 
       let productQuantity = parseInt(quantity as string, 10);
-      productQuantity = productQuantity + cart[productIndex].quantity;
-      const cartItem = cart[productIndex];
+      productQuantity = productQuantity + cart.items[productIndex].quantity;
 
-      await CartDAL.updateCartItem(uid, cartItem._id, {
-        quantity: productQuantity,
+      cart.items[productIndex].quantity = productQuantity;
+
+      let updatedTotalPrice = 0;
+
+      _.forEach(cart.items, (item) => {
+        updatedTotalPrice = updatedTotalPrice + item.price * item.quantity;
       });
+
+      cart.totalPrice = updatedTotalPrice;
+
+      await CartDAL.updateCart(uid, cart);
     } else {
       //product does not exists in cart, add new item
 
+      const product = await getProductById(productId);
+      if (!product) {
+        throw new RollingError(404, "product not found", "addToCart");
+      }
+      const variantDoc = _.find(product.variants, {
+        _id: new ObjectId(variantId),
+      });
+
+      if (!variantDoc) {
+        throw new RollingError(404, "variant not found", "addToCart");
+      }
       // get product variant from database and update the imageurl
       const item: RollingTypes.CartItem = {
-        _id: uuidv4(),
+        _id: new ObjectId(),
         productId,
         variantId,
         price: parseInt(price as string, 10),
         quantity: parseInt(quantity as string, 10),
         size,
         productName: name,
-        imageUrl: "",
+        imageUrl: variantDoc.images[0],
       };
 
-      await CartDAL.createCartItem(uid, item);
+      const updatedTotalPrice = cart.totalPrice + item.price * item.quantity;
+      const updatedTotalQuantity = cart.totalQuantity + 1;
+
+      cart.items.push(item);
+      console.log(cart.items.length);
+      cart.totalPrice = updatedTotalPrice;
+      cart.totalQuantity = updatedTotalQuantity;
+
+      await CartDAL.updateCart(uid, cart);
     }
     return new RollingResponse("cart created");
   } catch (error) {
     if (error instanceof RollingError) {
-      if (error.message === "cart is empty") {
+      if (error.status === 404 && error.message.includes("cart not found")) {
         // cart doesnot exists for user , create new cart
+        const product = await getProductById(productId);
+        if (!product) {
+          throw new RollingError(404, "product not found", "addToCart");
+        }
+        const variantDoc = _.find(product.variants, {
+          _id: new ObjectId(variantId),
+        });
+
+        if (!variantDoc) {
+          throw new RollingError(404, "variant not found", "addToCart");
+        }
+
         const item: RollingTypes.CartItem = {
-          _id: uuidv4(),
+          _id: new ObjectId(),
           productId,
           variantId,
           price: parseInt(price as string, 10),
           quantity: parseInt(quantity as string, 10),
           size,
           productName: name,
-          imageUrl: "",
+          imageUrl: variantDoc.images[0],
         };
 
-        await CartDAL.createCartItem(uid, item);
-
-        Logger.logToDb(
-          "addToCart",
-          `${uid} added product with ${productId}`,
+        const cart: RollingTypes.Cart = {
+          _id: new ObjectId(),
+          createdAt: Date.now(),
+          modifiedAt: Date.now(),
+          totalPrice: parseInt(price as string, 10),
+          totalQuantity: 1,
+          items: [item],
           uid,
-        );
+        };
+
+        await CartDAL.createCart(uid, cart);
 
         return new RollingResponse("cart created");
       }
@@ -82,15 +130,12 @@ export async function updateItem(
   const { quantity, size } = req.body;
   const cartItemId = req.params["cartItemId"];
 
-  if (quantity) {
-    await CartDAL.updateCartItem(uid, cartItemId, {
-      quantity: parseInt(quantity as string, 10),
-    });
-  }
-
-  if (size) {
-    await CartDAL.updateCartItem(uid, cartItemId, { size });
-  }
+  await CartDAL.updateCartItem(
+    uid,
+    cartItemId,
+    size,
+    parseInt(quantity as string, 10),
+  );
 
   return new RollingResponse("updated successfully");
 }
@@ -111,7 +156,24 @@ export async function deleteProduct(
   const { uid } = req.ctx.decodedToken;
   const cartItemid = req.params["cartItemid"];
 
-  await CartDAL.deleteCartItem(uid, cartItemid);
+  const cart = await CartDAL.getCart(uid);
+  const items = [...cart.items];
+
+  const itemIndex = _.findIndex(items, { _id: new ObjectId(cartItemid) });
+  if (itemIndex === -1) {
+    throw new RollingError(404, "item not found", "deleteProduct");
+  }
+
+  const updatedTotalQuantity = cart.totalQuantity - 1;
+  const deletedItem = items.splice(itemIndex, 1)[0];
+
+  const updatedTotalPrice =
+    cart.totalPrice - deletedItem.price * deletedItem.quantity;
+
+  cart.items = items;
+  cart.totalPrice = updatedTotalPrice;
+  cart.totalQuantity = updatedTotalQuantity;
+  await CartDAL.updateCart(uid, cart);
 
   Logger.logToDb("delete_cart_item", `${cartItemid} is deleted`, uid);
 

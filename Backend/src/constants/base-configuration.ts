@@ -19,4 +19,7 @@ export const BASE_CONFIGURATION: RollingTypes.Configuration = {
       flaggedStatusCodes: [],
     },
   },
+  order: {
+    orderPlacingEnabled: false,
+  },
 };

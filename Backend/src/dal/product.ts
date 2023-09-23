@@ -1,137 +1,89 @@
-import FirebaseAdmin from "../init/firebase-admin";
 import RollingError from "../utils/error";
-import { DocumentData } from "@google-cloud/firestore";
 import _ from "lodash";
-import { v4 as uuidv4 } from "uuid";
-import { getOrder, sumAllRecordValue, updateRecordArray } from "../utils/misc";
+import { sumAllRecordValue, updateRecordArray } from "../utils/misc";
 import {
   deleteFile,
   getFiles,
   renameImageFile,
   uploadFile,
 } from "../utils/blob-storage";
+import * as db from "../init/db";
+import { Collection, Document, ObjectId } from "mongodb";
 
-function getProductCollection(): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
-  return FirebaseAdmin().firestore().collection("products");
-}
-
-function getVariantCollection(
-  productId: string,
-): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
-  return FirebaseAdmin()
-    .firestore()
-    .collection("products")
-    .doc(productId)
-    .collection("variants");
-}
-
-type ProductResult = Omit<RollingTypes.Product, "variants">;
-
-async function variantsToProducts(
-  docs: FirebaseFirestore.QueryDocumentSnapshot<DocumentData>[],
-  skip: number,
-  limit: number,
-  category?: string,
-  stack?: string,
-): Promise<RollingTypes.Product[]> {
-  const products: RollingTypes.Product[] = [];
-  for (const doc of docs) {
-    const variantDoc = doc.data() as RollingTypes.ProductVariant;
-
-    const parentDocRef = doc.ref.parent.parent;
-    const parentDoc = await parentDocRef?.get();
-
-    const parentData = parentDoc?.data() as RollingTypes.ProductWithoutVariants;
-
-    const product: RollingTypes.Product = {
-      ...parentData,
-      variants: [variantDoc],
-    };
-    if (category === undefined || parentData.category === category) {
-      products.push(product);
-    }
-  }
-
-  const updatedProducts = skipAndLimit(skip, limit, products, stack);
-
-  return updatedProducts;
-}
-
-function skipAndLimit(
-  skip: number,
-  limit: number,
-  products: RollingTypes.Product[],
-  stack?: string,
-): RollingTypes.Product[] {
-  if (skip > 0 && skip >= products.length) {
-    throw new RollingError(404, "Product is empty", stack);
-  }
-  products = products.slice(skip > 0 ? skip : 0);
-
-  if (limit > products.length) {
-    limit = products.length;
-  }
-
-  products = products.slice(0, limit);
-
-  return products;
+function getProductCollection(): Collection<RollingTypes.Product> {
+  return db.collection<RollingTypes.Product>("products");
 }
 
 export async function getProducts(
   stack: string,
-  skip: number,
-  limit: number,
-  category?: string,
-  filter?: string,
-  color?: string,
-): Promise<Array<RollingTypes.Product>> {
+  opts: RollingTypes.ProductFilterOption,
+): Promise<Document[]> {
+  const { category, sortBy, skip, limit, color } = opts;
+
   try {
-    const productCollectionRef = getProductCollection();
-    const productQuery: FirebaseFirestore.Query<DocumentData> =
-      productCollectionRef;
-    let variantQuery: FirebaseFirestore.Query<DocumentData> = FirebaseAdmin()
-      .firestore()
-      .collectionGroup("variants");
+    const products = await getProductCollection()
+      .aggregate([
+        {
+          $match: {
+            ...(!_.isNil(category) && { category }),
+          },
+        },
+        {
+          $match: {
+            ...(!_.isNil(sortBy) &&
+              sortBy === "instock" && { totalSKU: { $gt: 0 } }),
+          },
+        },
+        {
+          $unwind: "$variants",
+        },
+        {
+          $match: {
+            ...(!_.isNil(color) && { "variants.color": color }),
+          },
+        },
 
-    if (!(await productQuery.limit(1).get()).size) {
-      throw new RollingError(404, "Product is empty", stack);
-    }
-
-    if (color) {
-      variantQuery = variantQuery.where("color", "==", color);
-    }
-
-    if (filter) {
-      if (filter === "expensive" || filter === "cheap") {
-        variantQuery = variantQuery.orderBy("price", getOrder(filter));
-      }
-
-      if (filter === "new" || filter === "old" || filter == "instock") {
-        if (filter == "instock") {
-          variantQuery = variantQuery.where("colorSKU", ">", 0);
-        } else {
-          variantQuery = variantQuery.orderBy("modifiedAt", getOrder(filter));
-        }
-      }
-    }
-
-    const variantQuerySnapshot = await variantQuery.get();
-
-    if (variantQuerySnapshot.empty) {
-      throw new RollingError(404, "Product is empty", stack);
-    }
-    const variantDocs = variantQuerySnapshot.docs;
-    const products = await variantsToProducts(
-      variantDocs,
-      skip,
-      limit,
-      category,
-      stack,
-    );
-
-    if (products.length == 0) {
-      throw new RollingError(404, "Product is empty", stack);
-    }
+        {
+          $project: {
+            _id: 1,
+            category: 1,
+            name: 1,
+            description: 1,
+            createdAt: 1,
+            modifiedAt: 1,
+            totalSKU: 1,
+            "variants._id": 1,
+            "variants.color": 1,
+            "variants.price": 1,
+            "variants.sizes": 1,
+            "variants.images": 1,
+            "variants.createdAt": 1,
+            "variants.modifiedAt": 1,
+          },
+        },
+      ])
+      .sort({
+        ...(!_.isNil(sortBy) &&
+          sortBy === "expensive" && {
+            "variants.price": -1,
+          }),
+        ...(!_.isNil(sortBy) &&
+          sortBy === "cheap" && {
+            "variants.price": 1,
+          }),
+        ...(!_.isNil(sortBy) &&
+          sortBy === "new" && {
+            "variants.modifiedAt": -1,
+          }),
+        ...(!_.isNil(sortBy) &&
+          sortBy === "old" && {
+            "variants.modifiedAt": 1,
+          }),
+        createdAt: -1,
+      })
+      .skip(skip ?? 0)
+      .limit(limit ?? 50)
+      .toArray();
 
     return products;
   } catch (e) {
@@ -140,48 +92,23 @@ export async function getProducts(
 }
 
 export async function createProduct(
-  product: RollingTypes.ProductWithoutVariants,
-): Promise<void> {
-  const productCollectionRef = getProductCollection();
-  await productCollectionRef.doc(product.productId).set(product);
-}
+  product: RollingTypes.Product,
+): Promise<{ insertedId: ObjectId }> {
+  const result = await getProductCollection().insertOne(product);
 
-export async function findProductById(
-  productId: string,
-): Promise<ProductResult> {
-  const productCollectionRef = getProductCollection();
-  const productDocRef = await productCollectionRef.doc(productId).get();
-  if (!productDocRef.exists) {
-    throw new RollingError(404, "Product does not exists");
-  }
-
-  const data = productDocRef.data();
-  return data as ProductResult;
+  return { insertedId: result.insertedId };
 }
 
 export async function getProductById(
   productId: string,
 ): Promise<RollingTypes.Product> {
-  const productCollectionRef = getProductCollection();
-  const productQuerySnapshot = await productCollectionRef.doc(productId).get();
-  if (!productQuerySnapshot.exists) {
+  const product = await getProductCollection().findOne({
+    _id: new ObjectId(productId),
+  });
+  if (!product) {
     throw new RollingError(404, "Product does not exists");
   }
-  const productWithoutVariants =
-    productQuerySnapshot.data() as RollingTypes.ProductWithoutVariants;
-
-  const variantCollectionRef = getVariantCollection(productId);
-  const variantQuerySnapshot = await variantCollectionRef.get();
-  const variantDocs = variantQuerySnapshot.docs;
-  const variants = variantDocs.map(
-    (doc) => doc.data() as RollingTypes.ProductVariant,
-  );
-
-  const Product: RollingTypes.Product = {
-    ...productWithoutVariants,
-    variants,
-  };
-  return Product;
+  return product;
 }
 
 export async function createVariation(
@@ -190,8 +117,8 @@ export async function createVariation(
   name: string,
   images: Express.Multer.File[],
   totalSKU: number,
-  productId: string,
   price: number,
+  productId: string,
 ): Promise<void> {
   const updatedSizes = updateRecordArray(sizes, sizes);
   const totalColorSKU: number = sumAllRecordValue(updatedSizes);
@@ -199,7 +126,7 @@ export async function createVariation(
   const signedUrl = await uploadFile(color, name, images);
 
   const productVariant: RollingTypes.ProductVariant = {
-    variantId: uuidv4(),
+    _id: new ObjectId(),
     color,
     colorSKU: totalColorSKU,
     price: parseInt(price as unknown as string, 10),
@@ -213,20 +140,13 @@ export async function createVariation(
   //update the totalsku in product
   const updatedTotalSku = totalSKU + totalColorSKU;
 
-  await updateTotalSkus(productId, updatedTotalSku);
-
-  const variantCollectionRef = getVariantCollection(productId);
-  await variantCollectionRef.doc(productVariant.variantId).set(productVariant);
-}
-
-export async function updateTotalSkus(
-  productId: string,
-  totalSku: number,
-): Promise<void> {
-  const productCollectionRef = getProductCollection();
-  await productCollectionRef.doc(productId).update({
-    totalSKU: totalSku,
-  });
+  await getProductCollection().updateOne(
+    { _id: new ObjectId(productId) },
+    {
+      $set: { totalSKU: updatedTotalSku },
+      $push: { variants: productVariant },
+    },
+  );
 }
 
 export async function updateProduct(
@@ -241,53 +161,63 @@ export async function updateProduct(
 
   try {
     const updatedImageUrl = await renameImageFile(previousName, name);
-    const variantCollectionRef = getVariantCollection(productId);
-    const variantQuerySnapshot = await variantCollectionRef.get();
-    const docs = variantQuerySnapshot.docs;
 
-    for (const doc of docs) {
-      const data = doc.data() as RollingTypes.ProductVariant;
-      const color = data["color"];
+    const product = await getProductById(productId);
+    const variants = product.variants;
 
-      // Find the matching color in updatedImageUrl
+    const updatedVariants = _.map(variants, (variant) => {
+      const color = variant.color;
       const matchingColorRecord = updatedImageUrl.find(
         (record) => record[color],
       );
 
       if (matchingColorRecord) {
-        // Update the image field with the new image URL
-        await doc.ref.update({
-          images: matchingColorRecord[color],
-          modifiedAt: Date.now(),
-        });
+        variant.images = matchingColorRecord[color];
+        variant.modifiedAt = Date.now();
       }
-    }
 
-    const productCollectionRef = getProductCollection();
-    await productCollectionRef.doc(productId).update({
-      name,
-      description,
+      return variant;
     });
+
+    await getProductCollection().updateOne(
+      { _id: new ObjectId(productId) },
+      {
+        $set: {
+          name,
+          description,
+          variants: updatedVariants,
+        },
+      },
+    );
   } catch (e) {
     throw new RollingError(500, e);
   }
 }
 
 export async function updateVariant(
-  sizes: RollingTypes.ProductVariantSize | undefined,
-  price: number | undefined,
-  images: Express.Multer.File[] | undefined,
+  sizes: RollingTypes.ProductVariantSize,
+  price: number,
+  images: Express.Multer.File[],
   variantId: string,
   productId: string,
 ): Promise<void> {
   try {
-    const productDoc = (
-      await getProductCollection().doc(productId).get()
-    ).data() as RollingTypes.ProductWithoutVariants;
-    const variantCollectionRef = getVariantCollection(productId);
-    const variantDoc = (
-      await variantCollectionRef.doc(variantId).get()
-    ).data() as RollingTypes.ProductVariant;
+    const productDoc = await getProductCollection().findOne({
+      _id: new ObjectId(productId),
+    });
+
+    if (!productDoc) {
+      throw new RollingError(404, "Product not found", "updateVariant");
+    }
+    const variantIndex = _.findIndex(productDoc.variants, {
+      _id: new ObjectId(variantId),
+    });
+
+    if (variantIndex === -1) {
+      throw new RollingError(404, "Variant not found", "updateVariant");
+    }
+
+    const variantDoc = productDoc.variants[variantIndex];
 
     let signedUrl: string[] = variantDoc.images;
     let colorPrice: number = variantDoc.price;
@@ -310,34 +240,38 @@ export async function updateVariant(
       signedUrl = await uploadFile(color, name, images);
     }
 
-    if (price) {
-      colorPrice = price;
-    }
+    colorPrice = price;
 
-    if (sizes) {
-      updatedSizes = updateRecordArray(variantDoc.sizes, sizes);
-      const totalSizes = sumAllRecordValue(updatedSizes);
-      totalColorSKU = parseInt(totalSizes as unknown as string, 10);
-    }
+    updatedSizes = updateRecordArray(variantDoc.sizes, sizes);
+    const totalSizes = sumAllRecordValue(updatedSizes);
+    totalColorSKU = parseInt(totalSizes as unknown as string, 10);
 
-    await getVariantCollection(productId).doc(variantId).update({
-      images: signedUrl,
+    productDoc.variants[variantIndex] = {
+      ...variantDoc,
       price: colorPrice,
+      images: signedUrl,
       colorSKU: totalColorSKU,
       sizes: updatedSizes,
       modifiedAt: Date.now(),
-    });
+    };
 
-    //update the totalsku in product
-    const allVariantDocs = (await variantCollectionRef.get()).docs;
     let totalSku = 0;
 
-    allVariantDocs.forEach((doc) => {
-      const colorSku = doc.data()["colorSKU"];
+    productDoc.variants.forEach((doc) => {
+      const colorSku = doc.colorSKU;
       totalSku = totalSku + colorSku;
     });
 
-    await updateTotalSkus(productId, totalSku);
+    const updatedProductDoc: RollingTypes.Product = {
+      ...productDoc,
+      totalSKU: totalSku,
+      modifiedAt: Date.now(),
+    };
+
+    await getProductCollection().updateOne(
+      { _id: new ObjectId(productId) },
+      { $set: updatedProductDoc },
+    );
   } catch (error) {
     throw new RollingError(500, error.message);
   }
@@ -345,15 +279,19 @@ export async function updateVariant(
 
 export async function deleteProductById(productId: string): Promise<void> {
   //delete blob storage
-  const productDoc = (
-    await getProductCollection().doc(productId).get()
-  ).data() as RollingTypes.ProductWithoutVariants;
-  const variantDocs = (await getVariantCollection(productId).get()).docs;
+  const productDoc = await getProductCollection().findOne({
+    _id: new ObjectId(productId),
+  });
+
+  if (!productDoc) {
+    throw new RollingError(404, "Product not found", "deleteProductById");
+  }
+
+  const variantDocs = productDoc.variants;
 
   await Promise.all(
     variantDocs.map(async (doc) => {
-      const data = doc.data() as RollingTypes.ProductVariant;
-      const color = data.color;
+      const color = doc.color;
       const name = productDoc.name;
       const filePath = `${process.env.BASE_STORAGE_PATH}/${name}/${color}`;
       const [files] = await getFiles(filePath);
@@ -362,12 +300,9 @@ export async function deleteProductById(productId: string): Promise<void> {
         const updatedFilePath = `${filePath}/${imageName}`;
         await deleteFile(updatedFilePath);
       });
-
-      //delete variant
-      await getVariantCollection(productId).doc(data.variantId).delete();
     }),
   );
 
   // delete product collection
-  await getProductCollection().doc(productId).delete();
+  await getProductCollection().deleteOne({ _id: new ObjectId(productId) });
 }

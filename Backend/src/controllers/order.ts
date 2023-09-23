@@ -10,29 +10,21 @@ export async function createOrder(
 ): Promise<RollingResponse> {
   const { uid, email } = req.ctx.decodedToken;
   const { addressId } = req.query;
-
   try {
     const cart = await getCart(uid);
     const address = await getAddressById(uid, addressId as string);
 
-    let amount = 0;
-    _.forEach(cart, (item) => (amount += item.price * item.quantity));
-
-    const totalItems = cart.length;
-
     const razorpayOrder = {
-      amount: amount * 100,
+      amount: cart.totalPrice * 100,
       currency: "INR",
-      receipt: "order_rcptid_01",
+      receipt: "order_rcptid_01", // TODO: look for a system for reciept generation
     };
-
     const orderRes = await razorpayInstance.orders.create(razorpayOrder);
-
     const order: RollingTypes.Order = {
-      orderId: orderRes.id,
+      razorpayOrderId: orderRes.id,
       amount: parseInt(orderRes.amount as string, 10), //smallest currency unit (paisa)
-      totalItems,
-      products: cart,
+      totalItems: cart.totalQuantity,
+      products: cart.items,
       createdAt: Date.now(),
       modifiedAt: Date.now(),
       paymentAttempts: orderRes.attempts,
@@ -46,12 +38,11 @@ export async function createOrder(
         mobileNumber: address.mobileNumber,
         email,
       },
+      uid,
     };
-
-    await OrderDAL.createOrder(uid, order);
-
+    await OrderDAL.createOrder(order);
     return new RollingResponse("order created", {
-      orderId: order.orderId,
+      orderId: order.razorpayOrderId,
     });
   } catch (error) {
     console.log(error);

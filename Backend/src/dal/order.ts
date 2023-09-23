@@ -1,15 +1,10 @@
+import { Collection, ObjectId, WithId } from "mongodb";
 import * as db from "../init/db";
 
-function getOrderCollection(
-  uid: string,
-): FirebaseFirestore.CollectionReference<RollingTypes.Order> {
-  return db.collection<RollingTypes.Order>(`users/${uid}/orders`);
+function getOrderCollection(): Collection<WithId<RollingTypes.Order>> {
+  return db.collection<RollingTypes.Order>("orders");
 }
 
-export async function createOrder(
-  uid: string,
-  order: RollingTypes.Order,
-): Promise<void> {
-  const orderCollectionRef = getOrderCollection(uid);
-  await orderCollectionRef.doc(order.orderId).set(order);
+export async function createOrder(order: RollingTypes.Order): Promise<void> {
+  await getOrderCollection().insertOne({ ...order, _id: new ObjectId() });
 }

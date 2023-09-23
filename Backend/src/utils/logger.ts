@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { resolve } from "path";
 import winston, { format } from "winston";
 import * as db from "../init/db";
-import { v4 as uuidV4 } from "uuid";
+import { ObjectId } from "mongodb";
 
 const errorColor = chalk.red.bold;
 const warningColor = chalk.yellow.bold;
@@ -86,10 +86,9 @@ const logToDb = async (
   const logsCollection = db.collection<RollingTypes.Log>("logs");
 
   logger.info(`${event}\t${uid}\t${JSON.stringify(message)}`);
-  const logId = uuidV4();
-  await logsCollection
-    .doc(logId)
-    .set({
+  logsCollection
+    .insertOne({
+      _id: new ObjectId(),
       timestamp: Date.now(),
       uid: uid ?? "",
       event,

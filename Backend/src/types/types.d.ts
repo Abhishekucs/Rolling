@@ -1,6 +1,7 @@
 type ExpressRequest = import("express").Request;
+type ObjectId = import("mongodb").ObjectId;
 
-type AddField<T, K extends string, V> = Partial<T> & { [P in K]: V };
+// type AddField<T, K extends string, V> = Partial<T> & { [P in K]: V };
 
 declare namespace RollingTypes {
   interface DecodedToken {
@@ -38,6 +39,9 @@ declare namespace RollingTypes {
         flaggedStatusCodes: number[];
       };
     };
+    order: {
+      orderPlacingEnabled: boolean;
+    };
   }
 
   interface Context {
@@ -50,7 +54,8 @@ declare namespace RollingTypes {
   }
 
   interface Address {
-    addressId: string;
+    _id: ObjectId;
+    uid: string;
     name: string;
     address1: string;
     address2: string;
@@ -69,7 +74,7 @@ declare namespace RollingTypes {
     email: string;
     name: string;
     addedAt: number;
-    admin?: boolean;
+    admin: boolean;
   }
 
   type CategoryType = "tshirt" | "hoodie";
@@ -79,7 +84,7 @@ declare namespace RollingTypes {
   type ProductVariantSize = Array<Record<ProductSize, number>>;
 
   interface ProductVariant {
-    variantId: string;
+    _id: ObjectId;
     color: string;
     colorSKU: number;
     price: number;
@@ -91,7 +96,7 @@ declare namespace RollingTypes {
   }
 
   interface Product {
-    productId: string;
+    _id: ObjectId;
     category: CategoryType;
     name: string;
     totalSKU: number;
@@ -101,10 +106,18 @@ declare namespace RollingTypes {
     modifiedAt: number;
   }
 
-  type ProductWithoutVariants = Omit<RollingTypes.Product, "variants">;
+  type sort = "expensive" | "cheap" | "new" | "old" | "instock";
+
+  interface ProductFilterOption {
+    category?: CategoryType;
+    sortBy?: sort;
+    color?: string;
+    skip?: number;
+    limit?: number;
+  }
 
   interface CartItem {
-    _id: string;
+    _id: ObjectId;
     productId: string;
     variantId: string;
     productName: string;
@@ -112,6 +125,16 @@ declare namespace RollingTypes {
     quantity: number;
     price: number;
     imageUrl: string;
+  }
+
+  interface Cart {
+    _id: ObjectId;
+    uid: string;
+    totalPrice: number;
+    totalQuantity: number;
+    items: CartItem[];
+    createdAt: number;
+    modifiedAt: number;
   }
 
   type OrderStatus = "created" | "attempted" | "paid" | "cancelled" | "none";
@@ -136,7 +159,7 @@ declare namespace RollingTypes {
   }
 
   interface Order {
-    orderId: string;
+    razorpayOrderId: string;
     amount: number;
     totalItems: number;
     products: CartItem[];
@@ -150,5 +173,6 @@ declare namespace RollingTypes {
     tax: number;
     paymentId: string;
     contact: OrderContact;
+    uid: string;
   }
 }

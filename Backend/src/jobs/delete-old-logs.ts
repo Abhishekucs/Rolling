@@ -13,20 +13,13 @@ async function deleteOldLogs(): Promise<void> {
     return;
   }
 
-  const docs = (await db.collection("logs").get()).docs;
-  let deletedCount = 0;
-  docs.forEach((doc) => {
-    const timestamp = Date.now() - LOG_MAX_AGE_MILLISECONDS;
-    const data = doc.data() as RollingTypes.Log;
-    if (data.timestamp > timestamp) {
-      deletedCount += 1;
-      doc.ref.delete();
-    }
-  });
+  const data = await db
+    .collection("logs")
+    .deleteMany({ timestamp: { $lt: Date.now() - LOG_MAX_AGE_MILLISECONDS } });
 
   Logger.logToDb(
     "system_logs_deleted",
-    `${deletedCount} logs deleted older than ${LOG_MAX_AGE_DAYS} day(s)`,
+    `${data.deletedCount} logs deleted older than ${LOG_MAX_AGE_DAYS} day(s)`,
     undefined,
   );
 }

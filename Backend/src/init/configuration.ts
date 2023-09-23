@@ -1,17 +1,11 @@
 import _ from "lodash";
 import { identity } from "../utils/misc";
 import Logger from "../utils/logger";
-import { v4 as uuidV4 } from "uuid";
 import { BASE_CONFIGURATION } from "../constants/base-configuration";
 import * as db from "../init/db";
+import { ObjectId } from "mongodb";
 
 const CONFIG_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 Minutes
-
-type ConfigurationWithId = AddField<
-  RollingTypes.Configuration,
-  "configurationId",
-  string
->;
 
 function mergeConfigurations(
   baseConfiguration: RollingTypes.Configuration,
@@ -69,26 +63,20 @@ export async function getLiveConfiguration(): Promise<RollingTypes.Configuration
   const configurationCollection = db.collection("configuration");
 
   try {
-    const liveConfiguration = (await configurationCollection.get()).empty
-      ? undefined
-      : (await configurationCollection.get()).docs[0].data();
+    const liveConfiguration = await configurationCollection.findOne();
 
     if (liveConfiguration) {
       const baseConfiguration = _.cloneDeep(BASE_CONFIGURATION);
 
-      const liveConfigurationWithoutId = _.omit(
-        liveConfiguration,
-        "configurationId",
-      ) as RollingTypes.Configuration;
+      const liveConfigurationWithoutId = _.omit(liveConfiguration, "_id");
       mergeConfigurations(baseConfiguration, liveConfigurationWithoutId);
 
       pushConfiguration(baseConfiguration);
       configuration = baseConfiguration;
     } else {
-      const configurationId = uuidV4();
-      await configurationCollection.doc(configurationId).set({
+      await configurationCollection.insertOne({
         ...BASE_CONFIGURATION,
-        configurationId,
+        _id: new ObjectId(),
       }); // Seed the base configuration.
     }
   } catch (error) {
@@ -110,15 +98,7 @@ async function pushConfiguration(
   }
 
   try {
-    const oldConfiguration = (
-      await db.collection("configuration").get()
-    ).docs[0].data() as ConfigurationWithId;
-
-    const configurationId = oldConfiguration.configurationId;
-    await db
-      .collection("configuration")
-      .doc(configurationId)
-      .update({ ...configuration });
+    await db.collection("configuration").replaceOne({}, configuration);
     serverConfigurationUpdated = true;
   } catch (error) {
     //console.error(`could not push configuration: Error: ${error}`);
@@ -136,15 +116,9 @@ export async function patchConfiguration(
     const currentConfiguration = _.cloneDeep(configuration);
     mergeConfigurations(currentConfiguration, configurationUpdates);
 
-    const oldConfiguration = (
-      await db.collection("configuration").get()
-    ).docs[0].data() as ConfigurationWithId;
-    const configurationId = oldConfiguration.configurationId;
-
     await db
       .collection("configuration")
-      .doc(configurationId)
-      .update({ ...currentConfiguration });
+      .updateOne({}, { $set: currentConfiguration }, { upsert: true });
 
     await getLiveConfiguration();
   } catch (error) {

@@ -1,50 +1,58 @@
-import FirebaseAdmin from "../init/firebase-admin";
 import {
-  WithFieldValue,
-  QueryDocumentSnapshot,
-  DocumentData,
-} from "firebase-admin/firestore";
+  Collection,
+  Db,
+  MongoClient,
+  MongoClientOptions,
+  WithId,
+} from "mongodb";
+import RollingError from "../utils/error";
+import Logger from "../utils/logger";
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const converter = <T>() => ({
-  toFirestore: (data: WithFieldValue<T>): WithFieldValue<T> => {
-    return data;
-  },
-  fromFirestore: (snapshot: QueryDocumentSnapshot): T => {
-    const data = snapshot.data()!;
-    return data as T;
-  },
-});
+let db: Db;
 
-export function collection<T extends DocumentData>(
-  collectionName: string,
-): FirebaseFirestore.CollectionReference<T> {
-  return FirebaseAdmin()
-    .firestore()
-    .collection(collectionName)
-    .withConverter(converter<T>());
+export async function connect(): Promise<void> {
+  const { DB_USERNAME, DB_PASSWORD, DB_URI, DB_NAME } = process.env;
+
+  if (!DB_URI || !DB_NAME) {
+    throw new Error("No database configuration provided");
+  }
+
+  const connectionOptions: MongoClientOptions = {
+    ignoreUndefined: true,
+    connectTimeoutMS: 2000,
+    serverSelectionTimeoutMS: 2000,
+    auth: !(DB_USERNAME && DB_PASSWORD)
+      ? undefined
+      : {
+          username: DB_USERNAME,
+          password: DB_PASSWORD,
+        },
+    appName: "Rolling",
+  };
+
+  const mongoClient = new MongoClient(
+    (DB_URI as string) ?? global.__MONGO_URI__, // Set in tests only
+    connectionOptions,
+  );
+
+  try {
+    await mongoClient.connect();
+    db = mongoClient.db(DB_NAME);
+  } catch (error) {
+    Logger.error(error.message);
+    Logger.error(
+      "Failed to connect to database. Exiting with exit status code 1.",
+    );
+    process.exit(1);
+  }
 }
 
-export function collectionGroup<T extends DocumentData>(
-  collectionGroupName: string,
-): FirebaseFirestore.CollectionGroup<T> {
-  return FirebaseAdmin()
-    .firestore()
-    .collectionGroup(collectionGroupName)
-    .withConverter(converter<T>());
-}
+export const getDb = (): Db | undefined => db;
 
-export function batch(): FirebaseFirestore.WriteBatch {
-  return FirebaseAdmin().firestore().batch();
-}
+export function collection<T>(collectionName: string): Collection<WithId<T>> {
+  if (!db) {
+    throw new RollingError(500, "Database is not initialized.");
+  }
 
-export function transaction<T>(
-  updateFunction: (transaction: FirebaseFirestore.Transaction) => Promise<T>,
-  transactionOptions?:
-    | FirebaseFirestore.ReadWriteTransactionOptions
-    | FirebaseFirestore.ReadOnlyTransactionOptions,
-): Promise<T> {
-  return FirebaseAdmin()
-    .firestore()
-    .runTransaction<T>(updateFunction, transactionOptions);
+  return db.collection<WithId<T>>(collectionName);
 }

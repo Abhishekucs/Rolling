@@ -9,7 +9,7 @@ import {
   validateRequest,
 } from "../middlewares/api-utils";
 import * as ProductController from "../controllers/product";
-import { isValidUuidV4 } from "../utils/validation";
+import { isValidMongodbId } from "../utils/validation";
 import * as RateLimit from "../middlewares/rate-limit";
 
 const router = Router();
@@ -29,7 +29,7 @@ const PRODUCT_VALIDATION_SCHEMA_WITH_LIMIT = {
 const idValidation = joi
   .string()
   .custom((value, helpers) => {
-    if (!isValidUuidV4(value)) {
+    if (!isValidMongodbId(value)) {
       return helpers.error("string.pattern.base");
     }
     return value;
@@ -48,7 +48,8 @@ const sizesValidation = joi
         joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
         joi.number().min(0).required(),
       ),
-  );
+  )
+  .required();
 
 router.get(
   "/",
@@ -122,9 +123,12 @@ router.patch(
   RateLimit.productUpdate,
   validateRequest({
     body: {
-      name: joi.string().min(1),
-      previousName: joi.string().min(1),
-      description: joi.array<string>().items(joi.string().min(1).required()),
+      name: joi.string().min(1).required(),
+      previousName: joi.string().min(1).required(),
+      description: joi
+        .array<string>()
+        .items(joi.string().min(1).required())
+        .required(),
     },
   }),
   checkIfUserIsAdmin(),
@@ -138,7 +142,7 @@ router.patch(
   handleImage(),
   validateRequest({
     body: {
-      price: joi.number().min(0),
+      price: joi.number().min(0).required(),
       sizes: sizesValidation,
     },
     params: {

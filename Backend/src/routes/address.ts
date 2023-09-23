@@ -3,8 +3,8 @@ import {
   containsProfanity,
   isUsernameValid,
   isValidMobileNumber,
+  isValidMongodbId,
   isValidPincode,
-  isValidUuidV4,
 } from "../utils/validation";
 import Joi from "joi";
 import { authenticateRequest } from "../middlewares/auth";
@@ -68,7 +68,7 @@ const mobileNumberValidation = Joi.number()
 const addressIdValidation = Joi.string()
   .required()
   .custom((value, helpers) => {
-    if (!isValidUuidV4(value)) {
+    if (!isValidMongodbId(value)) {
       return helpers.error("string.pattern.base");
     }
     return value;

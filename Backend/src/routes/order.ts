@@ -1,9 +1,13 @@
 import Router from "express";
 import { authenticateRequest } from "../middlewares/auth";
-import { asyncHandler, validateRequest } from "../middlewares/api-utils";
+import {
+  asyncHandler,
+  validateConfiguration,
+  validateRequest,
+} from "../middlewares/api-utils";
 import joi from "joi";
 import * as PaymentController from "../controllers/order";
-import { isValidUuidV4 } from "../utils/validation";
+import { isValidMongodbId } from "../utils/validation";
 
 const router = Router();
 
@@ -17,7 +21,7 @@ const idValidation = joi
   .string()
   .required()
   .custom((value, helpers) => {
-    if (!isValidUuidV4(value)) {
+    if (!isValidMongodbId(value)) {
       return helpers.error("string.pattern.base");
     }
     return value;
@@ -28,6 +32,12 @@ const idValidation = joi
 
 router.post(
   "/",
+  validateConfiguration({
+    criteria: (configuration) => {
+      return configuration.order.orderPlacingEnabled;
+    },
+    invalidMessage: "Order Placing is temporarily disabled",
+  }),
   authenticateRequest(),
   validateRequest({
     query: {

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticateRequest } from "../middlewares/auth";
 import { asyncHandler, validateRequest } from "../middlewares/api-utils";
 import joi from "joi";
-import { isValidUuidV4 } from "../utils/validation";
+import { isValidMongodbId } from "../utils/validation";
 import * as CartController from "../controllers/cart";
 import * as RateLimit from "../middlewares/rate-limit";
 
@@ -11,7 +11,7 @@ const router = Router();
 const idValidation = joi
   .string()
   .custom((value, helpers) => {
-    if (!isValidUuidV4(value)) {
+    if (!isValidMongodbId(value)) {
       return helpers.error("string.pattern.base");
     }
     return value;
@@ -51,8 +51,8 @@ router.patch(
   RateLimit.cartUpdateItem,
   validateRequest({
     body: {
-      quantity: joi.number().min(1),
-      size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl"),
+      quantity: joi.number().min(1).required(),
+      size: joi.string().valid("xs", "s", "m", "l", "xl", "xxl").required(),
     },
     params: {
       cartItemId: idValidation,

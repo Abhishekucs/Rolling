@@ -45,6 +45,16 @@ export const CONFIGURATION_FORM_SCHEMA: ObjectSchema<RollingTypes.Configuration>
     type: "object",
     label: "Server Configuration",
     fields: {
+      order: {
+        type: "object",
+        label: "Order",
+        fields: {
+          orderPlacingEnabled: {
+            type: "boolean",
+            label: "Order Placing Enabled",
+          },
+        },
+      },
       maintenance: {
         type: "boolean",
         label: "In Maintenance",

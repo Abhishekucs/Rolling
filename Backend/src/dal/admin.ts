@@ -1,20 +1,16 @@
-import FirebaseAdmin from "../init/firebase-admin";
+import * as db from "../init/db";
+import { Collection, WithId } from "mongodb";
 
-function getUserCollection(): FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> {
-  return FirebaseAdmin().firestore().collection("users");
+function getUserCollection(): Collection<WithId<RollingTypes.User>> {
+  return db.collection<RollingTypes.User>("users");
 }
 
+// TODO: create a separate collection for storing only uids of admins
 export async function isAdmin(uid: string): Promise<boolean> {
-  const userCollectionRef = getUserCollection();
-
-  const userDoc = await userCollectionRef
-    .where("uid", "==", uid)
-    .where("admin", "==", true)
-    .get();
-
-  if (userDoc.empty) {
-    return false;
-  } else {
+  const user = await getUserCollection().findOne({ uid });
+  if (user?.admin) {
     return true;
+  } else {
+    return false;
   }
 }

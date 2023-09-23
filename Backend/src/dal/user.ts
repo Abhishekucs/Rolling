@@ -1,8 +1,9 @@
 import _ from "lodash";
 import RollingError from "../utils/error";
 import * as db from "../init/db";
+import { Collection, WithId } from "mongodb";
 
-export function getUserCollection(): FirebaseFirestore.CollectionReference<RollingTypes.User> {
+export function getUserCollection(): Collection<WithId<RollingTypes.User>> {
   return db.collection<RollingTypes.User>("users");
 }
 
@@ -10,13 +11,12 @@ export async function getUser(
   uid: string,
   stack: string,
 ): Promise<RollingTypes.User> {
-  const userRef = getUserCollection();
-  const userDoc = await userRef.doc(uid).get();
-  if (!userDoc.exists) {
+  const user = await getUserCollection().findOne({ uid });
+  if (!user) {
     throw new RollingError(404, "User not found", stack);
   }
 
-  return userDoc.data() as RollingTypes.User;
+  return user;
 }
 
 export async function addUser(
@@ -31,11 +31,17 @@ export async function addUser(
     addedAt: Date.now(),
     admin: false,
   };
-  const userRef = getUserCollection();
-  await userRef.doc(uid).set(newUserDoc);
+  const result = await getUserCollection().updateOne(
+    { uid },
+    { $setOnInsert: newUserDoc },
+    { upsert: true },
+  );
+  if (result.upsertedCount === 0) {
+    throw new RollingError(409, "User document already exists", "addUser");
+  }
 }
 
-export async function updateUser(
+export async function updateUserName(
   name: string,
   previousName: string,
   uid: string,
@@ -44,13 +50,9 @@ export async function updateUser(
     throw new RollingError(400, "New name is same as the Old name");
   }
 
-  const userRef = getUserCollection();
-  await userRef.doc(uid).update({
-    name,
-  });
+  await getUserCollection().updateOne({ uid }, { $set: { name } });
 }
 
 export async function deleteUser(uid: string): Promise<void> {
-  const userRef = getUserCollection();
-  await userRef.doc(uid).delete();
+  await getUserCollection().deleteOne({ uid });
 }

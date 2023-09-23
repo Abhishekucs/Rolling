@@ -2,6 +2,7 @@ import _ from "lodash";
 import { profanities, regexProfanities } from "../constants/profanities";
 import { matchesAPattern } from "./misc";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
+import { ObjectId } from "mongodb";
 
 export function inRange(value: number, min: number, max: number): boolean {
   return value >= min && value <= max;
@@ -78,4 +79,12 @@ export function isValidUuidV4(id: string): boolean {
     return false;
   }
   return uuidValidate(id) && uuidVersion(id) === 4;
+}
+
+export function isValidMongodbId(id: string): boolean {
+  if (_.isNil(id)) {
+    return false;
+  }
+
+  return new ObjectId(id).toString() === id;
 }

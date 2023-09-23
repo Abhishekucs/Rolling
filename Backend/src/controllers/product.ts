@@ -1,9 +1,9 @@
 import { RollingResponse } from "../utils/rolling-response";
 import * as ProductDAL from "../dal/product";
 import _ from "lodash";
-import { v4 as uuidv4 } from "uuid";
 import RollingError from "../utils/error";
 import Logger from "../utils/logger";
+import { ObjectId } from "mongodb";
 
 export async function getAllProducts(
   req: RollingTypes.Request,
@@ -12,14 +12,13 @@ export async function getAllProducts(
 
   const queryLimit = Math.min(parseInt(limit as string, 10), 50);
 
-  const products = await ProductDAL.getProducts(
-    "getAllProducts",
-    parseInt(skip as string, 10),
-    queryLimit,
-    category as string,
-    filter as string,
-    color as string,
-  );
+  const products = await ProductDAL.getProducts("getAllProducts", {
+    skip: parseInt(skip as string, 10),
+    limit: queryLimit,
+    category: category as RollingTypes.CategoryType,
+    sortBy: filter as RollingTypes.sort,
+    color: color as string,
+  });
 
   return new RollingResponse("product retrieved", products);
 }
@@ -30,16 +29,17 @@ export async function createNewProduct(
   const { uid } = req.ctx.decodedToken;
   const { category, name, description } = req.body;
 
-  const product: RollingTypes.ProductWithoutVariants = {
-    productId: uuidv4(),
+  const product: RollingTypes.Product = {
+    _id: new ObjectId(),
     category,
     name,
     description,
     totalSKU: 0,
     createdAt: Date.now(),
     modifiedAt: Date.now(),
+    variants: [],
   };
-  await ProductDAL.createProduct(product);
+  const insertedId = await ProductDAL.createProduct(product);
 
   Logger.logToDb(
     "product created",
@@ -47,7 +47,7 @@ export async function createNewProduct(
     uid,
   );
 
-  return new RollingResponse("product created");
+  return new RollingResponse("product created", insertedId);
 }
 
 export async function createNewVariation(
@@ -56,7 +56,11 @@ export async function createNewVariation(
   const { uid } = req.ctx.decodedToken;
   const productId = req.params["productId"];
 
-  const product = await ProductDAL.findProductById(productId);
+  const product = await ProductDAL.getProductById(productId);
+
+  if (!product) {
+    throw new RollingError(404, "product not founde", "createNewVariation");
+  }
 
   const { color, price, sizes } = req.body;
   const images = req.files as Express.Multer.File[];
@@ -67,8 +71,8 @@ export async function createNewVariation(
     product.name,
     images,
     product.totalSKU,
-    productId,
     price,
+    productId,
   );
 
   Logger.logToDb(
@@ -108,13 +112,6 @@ export async function updateVariant(
   const variantId = req.params["variantId"];
   const { sizes, price } = req.body;
   const images = req.files as Express.Multer.File[];
-
-  if (images === undefined && sizes === undefined && price === undefined) {
-    throw new RollingError(
-      403,
-      "Either images or sizes or price should be valid value",
-    );
-  }
 
   await ProductDAL.updateVariant(sizes, price, images, variantId, productId);
 

@@ -1,101 +1,85 @@
 import RollingError from "../utils/error";
 import _ from "lodash";
 import * as db from "../init/db";
+import { Collection, ObjectId } from "mongodb";
 
-export function getAddressCollection(
-  uid: string,
-): FirebaseFirestore.CollectionReference<RollingTypes.Address> {
-  return db.collection<RollingTypes.Address>(`users/${uid}/addresses`);
+export function getAddressCollection(): Collection<RollingTypes.Address> {
+  return db.collection<RollingTypes.Address>(`addresses`);
 }
 
 export async function getAllAddress(
   uid: string,
   stack: string,
-): Promise<Array<RollingTypes.Address>> {
-  const addressRef = getAddressCollection(uid);
-  const addressSnapshot = await addressRef.get();
-  if (addressSnapshot.empty) {
-    throw new RollingError(404, "Address is Empty", stack);
-  }
-  const addressDocs = addressSnapshot.docs;
-  const Address = addressDocs.map((doc) => doc.data());
+): Promise<RollingTypes.Address[]> {
+  const result = await getAddressCollection().find({ uid }).toArray();
 
-  return Address;
+  if (!result) throw new RollingError(404, "Addresses not found", stack);
+
+  return result;
 }
 
 export async function getAddressById(
   uid: string,
   addressId: string,
 ): Promise<RollingTypes.Address> {
-  const snapshot = await getAddressCollection(uid).doc(addressId).get();
-  if (!snapshot.exists) {
+  const address = await getAddressCollection().findOne({
+    uid,
+    _id: new ObjectId(addressId),
+  });
+  if (!address) {
     throw new RollingError(404, "Address not found");
   }
 
-  return snapshot.data() as RollingTypes.Address;
+  return address;
 }
 
 export async function addAddress(
   address: RollingTypes.Address,
   uid: string,
 ): Promise<void> {
-  const addressRef = getAddressCollection(uid);
-  const snapshot = await addressRef.get();
-
+  const addresses = await getAddressCollection().find({ uid }).toArray();
   const isDefaultAddressTrue = address.defaultAddress;
 
-  if (snapshot.empty) {
+  if (addresses.length === 0) {
     if (!isDefaultAddressTrue) {
       address.defaultAddress = true;
     }
   } else {
     if (isDefaultAddressTrue) {
-      const batch = db.batch();
-      snapshot.forEach((doc) => {
-        batch.update(doc.ref, {
-          defaultAddress: false,
-        });
-      });
-      await batch.commit();
+      await getAddressCollection().updateMany(
+        { uid },
+        { $set: { defaultAddress: false } },
+      );
     }
   }
-  await addressRef.doc(address.addressId).set(address);
+  await getAddressCollection().insertOne(address);
 }
 
 export async function updateAddress(
   uid: string,
   address: RollingTypes.Address,
 ): Promise<void> {
-  const addressCollectionRef = getAddressCollection(uid);
-  const snapshot = await addressCollectionRef.get();
   const isDefaultAddressTrue = address.defaultAddress;
 
   if (isDefaultAddressTrue) {
-    const batch = db.batch();
-    snapshot.forEach((doc) => {
-      batch.update(doc.ref, {
-        defaultAddress: false,
-      });
-    });
-
-    await batch.commit();
+    await getAddressCollection().updateMany(
+      { uid },
+      { $set: { defaultAddress: false } },
+    );
   }
-  await addressCollectionRef.doc(address.addressId).update(address);
+  await getAddressCollection().updateOne(
+    { _id: new ObjectId(address._id) },
+    { $set: address },
+  );
 }
 
 export async function deleteAllAddress(uid: string): Promise<void> {
-  const addressRef = getAddressCollection(uid);
-  const addressSnapshot = (await addressRef.get()).docs;
-
-  _.forEach(addressSnapshot, async (snapshot) => {
-    await snapshot.ref.delete();
-  });
+  await getAddressCollection().deleteMany({ uid });
 }
 
 export async function deleteById(
   uid: string,
   addressId: string,
 ): Promise<void> {
-  const addressCollectionRef = getAddressCollection(uid);
-  await addressCollectionRef.doc(addressId).delete();
+  await getAddressCollection().deleteOne({ uid, _id: new ObjectId(addressId) });
 }

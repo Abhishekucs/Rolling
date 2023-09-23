@@ -23,13 +23,26 @@ export async function getUser(
       //since there is no data in the database anyway, we can just delete the user from the auth system
       //and ask them to sign up again
 
-      await FirebaseAdmin().auth().deleteUser(uid);
-      throw new RollingError(
-        404,
-        "User not found in the database, but found in the auth system. We have deleted the ghost user from the auth system. Please sign up again.",
-        "get user",
-        uid,
-      );
+      try {
+        await FirebaseAdmin().auth().deleteUser(uid);
+        throw new RollingError(
+          404,
+          "User not found in the database, but found in the auth system. We have deleted the ghost user from the auth system. Please sign up again.",
+          "get user",
+          uid,
+        );
+      } catch (e) {
+        if (e.code === "auth/user-not-found") {
+          throw new RollingError(
+            404,
+            "User not found in the database or the auth system. Please sign up again.",
+            "get user",
+            uid,
+          );
+        } else {
+          throw error;
+        }
+      }
     } else {
       throw error;
     }
@@ -62,7 +75,7 @@ export async function updateUserName(
 
   const user = await UserDAL.getUser(uid, "updateUserName");
 
-  await UserDAL.updateUser(name, user.name, uid);
+  await UserDAL.updateUserName(name, user.name, uid);
 
   Logger.logToDb(
     "user_name_updated",

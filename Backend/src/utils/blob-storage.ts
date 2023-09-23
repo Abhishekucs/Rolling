@@ -1,10 +1,7 @@
 import FirebaseAdmin from "../init/firebase-admin";
-import {
-  Bucket,
-  GetSignedUrlConfig,
-  GetSignedUrlResponse,
-  GetFilesResponse,
-} from "@google-cloud/storage";
+import { Bucket, GetFilesResponse } from "@google-cloud/storage";
+
+import { getDownloadURL } from "firebase-admin/storage";
 
 const BASE_STORAGE_PATH = process.env.BASE_STORAGE_PATH ?? "productImage";
 
@@ -22,11 +19,12 @@ export async function uploadFile(
 
   for (const image of images) {
     const STORAGE_PATH = `${BASE_STORAGE_PATH}/${name}/${color}/${image.originalname}`;
+
     await bucketRef.upload(image.path, {
       destination: STORAGE_PATH,
     });
 
-    const [url] = await generateSignedUrl(STORAGE_PATH);
+    const url = await generateSignedUrl(STORAGE_PATH);
     signedUrl.push(url);
   }
 
@@ -63,7 +61,7 @@ export async function renameImageFile(
       await getStorageBucket()
         .file(PREVIOUS_STORAGE_PATH)
         .move(NEW_STORAGE_PATH, moveOptions);
-      const [updatedUrl] = await generateSignedUrl(NEW_STORAGE_PATH);
+      const updatedUrl = await generateSignedUrl(NEW_STORAGE_PATH);
 
       // Check if the updatedUrls array already contains a record with the same color
       const existingRecordIndex = updatedUrls.findIndex(
@@ -84,17 +82,16 @@ export async function renameImageFile(
   return updatedUrls;
 }
 
-async function generateSignedUrl(
-  filename: string,
-): Promise<GetSignedUrlResponse> {
+async function generateSignedUrl(filename: string): Promise<string> {
   const bucketRef = getStorageBucket();
 
-  const options: GetSignedUrlConfig = {
-    version: "v4",
-    action: "read",
-    expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-  };
-  const url = await bucketRef.file(filename).getSignedUrl(options);
+  //   const options: GetSignedUrlConfig = {
+  //     version: "v4",
+  //     action: "read",
+  //     expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+  //   };
+  const fileRef = bucketRef.file(filename);
+  const url = await getDownloadURL(fileRef);
 
   return url;
 }

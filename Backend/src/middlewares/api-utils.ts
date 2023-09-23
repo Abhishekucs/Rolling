@@ -9,6 +9,7 @@ import RollingError from "../utils/error";
 import multer from "multer";
 import { isAdmin } from "../dal/admin";
 import fs from "fs";
+import path from "path";
 
 interface ValidationOptions<T> {
   criteria: (data: T) => boolean;
@@ -139,13 +140,16 @@ function handleImage(): RequestHandler {
   const upload = multer({
     storage: storage,
     limits: {
-      fileSize: 10485760,
+      fileSize: 1024 * 1024 * 10, //10MB
     },
     fileFilter: (_req, file, cb): void => {
       const fileTypes = /(^image)(\/)(jpe?g|png)$/i;
       const mimetype = fileTypes.test(file.mimetype);
+      const extname = fileTypes.test(
+        `image/${path.extname(file.originalname).toLowerCase().split(".")[1]}`,
+      );
 
-      if (mimetype) {
+      if (mimetype && extname) {
         return cb(null, true);
       }
       cb(new RollingError(403, `unsupported fileType - ${file.mimetype}`));
@@ -153,8 +157,6 @@ function handleImage(): RequestHandler {
   });
 
   return (req: RollingTypes.Request, res: Response, next: NextFunction) => {
-    // return upload.array("images", 5);
-
     // @ts-nocheck
     upload.array("images", 5)(req, res, (err: unknown) => {
       if (err) {
