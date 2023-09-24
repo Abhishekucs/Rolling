@@ -13,7 +13,7 @@ export async function getAllProducts(
 
   const queryLimit = Math.min(parseInt(limit as string, 10), 50);
 
-  const products = await ProductDAL.getProducts("getAllProducts", {
+  const products = await ProductDAL.getProducts({
     skip: parseInt(skip as string, 10),
     limit: queryLimit,
     category: category as RollingTypes.CategoryType,

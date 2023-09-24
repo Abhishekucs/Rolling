@@ -15,10 +15,9 @@ function getProductCollection(): Collection<RollingTypes.Product> {
 }
 
 export async function getProducts(
-  stack: string,
-  opts: RollingTypes.ProductFilterOption,
+  opts?: RollingTypes.ProductFilterOption,
 ): Promise<Document[]> {
-  const { category, sortBy, skip, limit, color } = opts;
+  const { category, sortBy, skip, limit, color } = opts ?? {};
 
   try {
     const products = await getProductCollection()

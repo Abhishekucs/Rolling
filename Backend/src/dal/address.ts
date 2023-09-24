@@ -36,7 +36,7 @@ export async function getAddressById(
 export async function addAddress(
   address: RollingTypes.Address,
   uid: string,
-): Promise<void> {
+): Promise<{ insertedId: ObjectId }> {
   const addresses = await getAddressCollection().find({ uid }).toArray();
   const isDefaultAddressTrue = address.defaultAddress;
 
@@ -52,7 +52,9 @@ export async function addAddress(
       );
     }
   }
-  await getAddressCollection().insertOne(address);
+  const res = await getAddressCollection().insertOne(address);
+
+  return { insertedId: res.insertedId };
 }
 
 export async function updateAddress(

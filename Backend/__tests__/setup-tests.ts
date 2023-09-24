@@ -44,7 +44,13 @@ jest.mock("firebase-admin", () => ({
   },
 }));
 
-const collectionsForCleanUp = ["users"];
+const collectionsForCleanUp = [
+  "users",
+  "addresses",
+  "products",
+  "order",
+  "cart",
+];
 
 let db: Db;
 let connection: MongoClient;
