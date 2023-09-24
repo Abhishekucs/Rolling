@@ -1,4 +1,13 @@
+import { Collection, Db, MongoClient, WithId } from "mongodb";
+
 process.env.MODE = "dev";
+
+jest.mock("../src/init/db", () => ({
+  __esModule: true,
+  getDb: (): Db => db,
+  collection: <T>(name: string): Collection<WithId<T>> =>
+    db.collection<WithId<T>>(name),
+}));
 
 jest.mock("../src/utils/logger", () => ({
   __esModule: true,
@@ -34,3 +43,32 @@ jest.mock("firebase-admin", () => ({
     }),
   },
 }));
+
+const collectionsForCleanUp = ["users"];
+
+let db: Db;
+let connection: MongoClient;
+beforeAll(async () => {
+  connection = await MongoClient.connect(global.__MONGO_URI__);
+  db = connection.db();
+});
+
+beforeEach(async () => {
+  if (global.__MONGO_URI__) {
+    await Promise.all(
+      collectionsForCleanUp.map((collection) =>
+        db.collection(collection).deleteMany({}),
+      ),
+    );
+  }
+});
+
+const realDateNow = Date.now;
+
+afterEach(() => {
+  Date.now = realDateNow;
+});
+
+afterAll(async () => {
+  await connection.close();
+});

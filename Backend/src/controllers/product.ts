@@ -4,6 +4,7 @@ import _ from "lodash";
 import RollingError from "../utils/error";
 import Logger from "../utils/logger";
 import { ObjectId } from "mongodb";
+import { transformData } from "../utils/misc";
 
 export async function getAllProducts(
   req: RollingTypes.Request,
@@ -59,19 +60,22 @@ export async function createNewVariation(
   const product = await ProductDAL.getProductById(productId);
 
   if (!product) {
-    throw new RollingError(404, "product not founde", "createNewVariation");
+    throw new RollingError(404, "product not found", "createNewVariation");
   }
 
   const { color, price, sizes } = req.body;
+
+  const transformedSizes = transformData(sizes);
+
   const images = req.files as Express.Multer.File[];
 
-  await ProductDAL.createVariation(
-    sizes,
-    color,
+  const res = await ProductDAL.createVariation(
+    transformedSizes,
+    color as string,
     product.name,
     images,
     product.totalSKU,
-    price,
+    parseInt(price as string, 10),
     productId,
   );
 
@@ -81,7 +85,7 @@ export async function createNewVariation(
     uid,
   );
 
-  return new RollingResponse("variant created");
+  return new RollingResponse("variant created", res);
 }
 
 export async function getProductById(
@@ -111,9 +115,16 @@ export async function updateVariant(
   const productId = req.params["productId"];
   const variantId = req.params["variantId"];
   const { sizes, price } = req.body;
+  const transformedSizes = transformData(sizes);
   const images = req.files as Express.Multer.File[];
 
-  await ProductDAL.updateVariant(sizes, price, images, variantId, productId);
+  await ProductDAL.updateVariant(
+    transformedSizes,
+    price,
+    images,
+    variantId,
+    productId,
+  );
 
   return new RollingResponse("variant updated successfully");
 }

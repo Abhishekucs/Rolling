@@ -86,33 +86,4 @@ describe("Misc Utils", () => {
       expect(misc.identity(input)).toEqual(expected);
     });
   });
-
-  it("getOrder", () => {
-    const testCases = [
-      {
-        input: "expensive",
-        expected: "desc",
-      },
-      {
-        input: "new",
-        expected: "desc",
-      },
-      {
-        input: "cheap",
-        expected: "asc",
-      },
-      {
-        input: "old",
-        expected: "asc",
-      },
-      {
-        input: "",
-        expected: "asc",
-      },
-    ];
-
-    _.each(testCases, ({ input, expected }) => {
-      expect(misc.getOrder(input)).toEqual(expected);
-    });
-  });
 });

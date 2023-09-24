@@ -48,3 +48,28 @@ export function sumAllRecordValue(value: Record<string, number>[]): number {
 
   return parseInt(result as unknown as string, 10);
 }
+
+export function transformData(
+  data: { [key: string]: string }[],
+): { [key: string]: number }[] {
+  const transformedData = data.map((item) => {
+    const key = Object.keys(item)[0]; // Extract the key
+    const value = Number(item[key]); // Convert the value to a number
+    return { [key]: value }; // Create the desired object format
+  });
+
+  return transformedData;
+}
+
+export function sumAllObjectValue(data: { [key: string]: number }[]): number {
+  const result = data.reduce<number>((accumulator, obj) => {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        accumulator += obj[key];
+      }
+    }
+    return accumulator;
+  }, 0);
+
+  return result;
+}

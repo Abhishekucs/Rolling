@@ -1,6 +1,6 @@
 import RollingError from "../utils/error";
 import _ from "lodash";
-import { sumAllRecordValue, updateRecordArray } from "../utils/misc";
+import { sumAllObjectValue } from "../utils/misc";
 import {
   deleteFile,
   getFiles,
@@ -119,9 +119,8 @@ export async function createVariation(
   totalSKU: number,
   price: number,
   productId: string,
-): Promise<void> {
-  const updatedSizes = updateRecordArray(sizes, sizes);
-  const totalColorSKU: number = sumAllRecordValue(updatedSizes);
+): Promise<{ variantId: ObjectId }> {
+  const totalColorSKU = sumAllObjectValue(sizes);
 
   const signedUrl = await uploadFile(color, name, images);
 
@@ -130,7 +129,7 @@ export async function createVariation(
     color,
     colorSKU: totalColorSKU,
     price: parseInt(price as unknown as string, 10),
-    sizes: updatedSizes,
+    sizes: sizes,
     images: signedUrl,
     createdAt: Date.now(),
     modifiedAt: Date.now(),
@@ -147,6 +146,8 @@ export async function createVariation(
       $push: { variants: productVariant },
     },
   );
+
+  return { variantId: productVariant._id };
 }
 
 export async function updateProduct(
@@ -222,7 +223,6 @@ export async function updateVariant(
     let signedUrl: string[] = variantDoc.images;
     let colorPrice: number = variantDoc.price;
     let totalColorSKU: number = variantDoc.colorSKU;
-    let updatedSizes: RollingTypes.ProductVariantSize = variantDoc.sizes;
 
     if (images && !_.isEmpty(images)) {
       const color = variantDoc.color;
@@ -241,17 +241,14 @@ export async function updateVariant(
     }
 
     colorPrice = price;
-
-    updatedSizes = updateRecordArray(variantDoc.sizes, sizes);
-    const totalSizes = sumAllRecordValue(updatedSizes);
-    totalColorSKU = parseInt(totalSizes as unknown as string, 10);
+    totalColorSKU = sumAllObjectValue(sizes);
 
     productDoc.variants[variantIndex] = {
       ...variantDoc,
       price: colorPrice,
       images: signedUrl,
       colorSKU: totalColorSKU,
-      sizes: updatedSizes,
+      sizes,
       modifiedAt: Date.now(),
     };
 

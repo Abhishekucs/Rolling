@@ -2,7 +2,7 @@ import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import * as AuthUtils from "../../src/utils/auth";
 import * as Auth from "../../src/middlewares/auth";
 import { NextFunction, Request, Response } from "express";
-//import { getCachedConfiguration } from "../../src/init/configuration";
+import { getCachedConfiguration } from "../../src/init/configuration";
 
 const mockDecodedToken: DecodedIdToken = {
   uid: "123456789",
@@ -29,28 +29,7 @@ describe("middlewares/auth", () => {
         authorization: "Bearer 123456789",
       },
       ctx: {
-        configuration: {
-          maintenance: false,
-          users: {
-            signUp: false,
-          },
-          admin: {
-            endpointsEnabled: false,
-          },
-          product: {
-            submissionEnabled: false,
-          },
-          address: {
-            submissionEnabled: false,
-          },
-          rateLimiting: {
-            badAuthentication: {
-              enabled: false,
-              penalty: 0,
-              flaggedStatusCodes: [],
-            },
-          },
-        },
+        configuration: await getCachedConfiguration(),
         decodedToken: {
           type: "None",
           uid: "",

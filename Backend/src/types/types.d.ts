@@ -81,7 +81,7 @@ declare namespace RollingTypes {
   type ProductTag = "new" | "sold out" | "none";
   type ProductSize = "xs" | "s" | "m" | "l" | "xl" | "xxl";
 
-  type ProductVariantSize = Array<Record<ProductSize, number>>;
+  type ProductVariantSize = { [size: ProductSize]: number }[];
 
   interface ProductVariant {
     _id: ObjectId;

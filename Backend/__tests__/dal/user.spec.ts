@@ -1,39 +1,51 @@
-import * as UserDal from "../../src/dal/user";
-import * as firebase from "firebase-admin";
-import { mockFirebase } from "firestore-jest-mock";
-
-Date.now = jest.fn(() => 1234);
-
-mockFirebase({
-  database: {
-    users: [
-      {
-        id: "1",
-        uid: "userId",
-        name: "mock name",
-        email: "mockemail@gmail.com",
-        admin: false,
-        addedAt: Date.now(),
-      },
-    ],
-  },
-});
+import * as UserDAL from "../../src/dal/user";
 
 describe("UserDAl", () => {
-  it("should be add new user", async () => {
+  it("should add new user", async () => {
     const newUser = {
       email: "mockemail@gmail.com",
       uid: "userId",
       name: "mock name",
-      addedAt: Date.now(),
-      admin: false,
     };
 
-    //await UserDal.addUser(newUser.name, newUser.email, newUser.uid);
-    const insertedUser = await UserDal.getUser(newUser.uid, "test");
+    await UserDAL.addUser(newUser.name, newUser.email, newUser.uid);
+    const insertedUser = await UserDAL.getUser(newUser.uid, "test");
 
     expect(insertedUser.name).toBe(newUser.name);
     expect(insertedUser.email).toBe(newUser.email);
     expect(insertedUser.uid).toBe(newUser.uid);
+  });
+
+  it("should throw error if the user already exists", async () => {
+    const newUser = {
+      email: "mockemail@gmail.com",
+      uid: "userId",
+      name: "mock name",
+    };
+
+    await UserDAL.addUser(newUser.name, newUser.email, newUser.uid);
+
+    await expect(
+      UserDAL.addUser(newUser.name, newUser.email, newUser.uid),
+    ).rejects.toThrow("User document already exists");
+  });
+
+  it("updateUserName should change the name of user", async () => {
+    const testUser = {
+      name: "Test",
+      email: "mockemail@email.com",
+      uid: "userId",
+    };
+
+    await UserDAL.addUser(testUser.name, testUser.email, testUser.uid);
+
+    await UserDAL.updateUserName(
+      "renamedTestUser",
+      testUser.name,
+      testUser.uid,
+    );
+
+    const updatedUser = await UserDAL.getUser(testUser.uid, "test");
+    expect(updatedUser.name).toBe("renamedTestUser");
   });
 });
