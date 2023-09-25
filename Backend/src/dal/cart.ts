@@ -17,14 +17,16 @@ export async function getCart(uid: string): Promise<RollingTypes.Cart> {
 export async function createCart(
   uid: string,
   cart: RollingTypes.Cart,
-): Promise<void> {
-  await getCartCollection().updateOne(
+): Promise<{ insertedId: ObjectId | null }> {
+  const res = await getCartCollection().updateOne(
     { uid },
     { $setOnInsert: cart },
     { upsert: true },
   );
 
   Logger.logToDb("create_cart", `Cart created`, uid);
+
+  return { insertedId: res.upsertedId };
 }
 
 export async function updateCart(
@@ -66,10 +68,10 @@ export async function updateCartItem(
 
 export async function deleteCartItem(
   uid: string,
-  cartId: string,
+  cartItemId: string,
 ): Promise<void> {
   await getCartCollection().updateOne(
     { uid },
-    { $pull: { items: { _id: new ObjectId(cartId) } }, $set: {} },
+    { $pull: { items: { _id: new ObjectId(cartItemId) } } },
   );
 }

@@ -16,6 +16,7 @@ import { RollingResponse } from "../utils/rolling-response";
 import { asyncHandler } from "../middlewares/api-utils";
 import configuration from "./configuration";
 import { join } from "path";
+import { getMetrics } from "../controllers/metrics";
 
 const pathOverride = process.env.PATH_OVERRIDE;
 const BASE_ROUTE = pathOverride ? `/${pathOverride}` : "";
@@ -31,6 +32,8 @@ const API_ROUTE_MAP = {
 };
 
 function addApiRoutes(app: Application): void {
+  app.get("/metrics", getMetrics);
+
   app.use("/configuration", configuration);
 
   if (process.env.MODE === "dev") {

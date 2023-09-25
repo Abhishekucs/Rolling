@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  rolling-redis:
+    container_name: rolling-redis
+    image: redis:6.2.6
+    ports:
+      - "${DOCKER_REDIS_PORT:-6379}:${DOCKER_REDIS_PORT:-6379}"
+    restart: on-failure
+    volumes:
+      - redis-data:/data
+
+  rolling-mongodb:
+    container_name: rolling-mongodb
+    image: mongodb/atlas
+    restart: on-failure
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "${DOCKER_DB_PORT:-27017}:${DOCKER_DB_PORT:-27017}"
+
+  rolling-prom-server:
+    container_name: rolling-prom-server
+    image: prom/prometheus
+    ports:
+      - "${DOCKER_PROM_PORT:-9090}:${DOCKER_PROM_PORT:-9090}"
+    volumes:
+      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+volumes:
+  mongo-data:
+  redis-data:
+  prometheus-data:
