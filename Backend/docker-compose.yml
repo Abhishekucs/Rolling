@@ -18,6 +18,22 @@ services:
     ports:
       - "${DOCKER_DB_PORT:-27017}:${DOCKER_DB_PORT:-27017}"
 
+  rolling:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rolling
+    container_name: rolling
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/usr/app
+      - rolling-data:/usr/app/node_modules
+    command: ["npm", "run", "dev"]
+
   rolling-prom-server:
     container_name: rolling-prom-server
     image: prom/prometheus
@@ -25,9 +41,22 @@ services:
       - "${DOCKER_PROM_PORT:-9090}:${DOCKER_PROM_PORT:-9090}"
     volumes:
       - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    restart: unless-stopped
+
+  rolling-grafana:
+    container_name: rolling-grafana
+    image: grafana/grafana-enterprise
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
 
 volumes:
   mongo-data:
   redis-data:
   prometheus-data:
+  grafana-data:
+  rolling-data:
