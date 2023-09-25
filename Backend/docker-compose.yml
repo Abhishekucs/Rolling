@@ -25,7 +25,7 @@ services:
       - "${DOCKER_PROM_PORT:-9090}:${DOCKER_PROM_PORT:-9090}"
     volumes:
       - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
 
 volumes:
   mongo-data:

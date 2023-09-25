@@ -4,13 +4,14 @@ import app from "./app";
 import { init as initFirebaseAdmin } from "./init/firebase-admin";
 import Logger from "./utils/logger";
 import * as RedisClient from "./init/redis";
+import { version } from "./version";
 import queues from "./queues";
 import workers from "./workers";
 import * as EmailClient from "./init/email-client";
 import jobs from "./jobs";
 import { getLiveConfiguration } from "./init/configuration";
 import * as db from "./init/db";
-import { collectDefaultMetrics } from "./utils/metrics";
+import { collectDefaultMetrics, recordServerVersion } from "./utils/metrics";
 
 async function bootserver(port: number): Promise<Server> {
   try {
@@ -58,11 +59,12 @@ async function bootserver(port: number): Promise<Server> {
           .map((worker) => worker(connection).name)
           .join(", ")}`,
       );
-
-      Logger.info("Starting cron jobs...");
-      jobs.forEach((job) => job.start());
-      Logger.success("Cron jobs started");
     }
+    Logger.info("Starting cron jobs...");
+    jobs.forEach((job) => job.start());
+    Logger.success("Cron jobs started");
+
+    recordServerVersion(version);
   } catch (error) {
     Logger.error("Failed to boot server");
     Logger.error(error.message);

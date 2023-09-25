@@ -1,3 +1,5 @@
+import uaparser from "ua-parser-js";
+
 export function matchesAPattern(text: string, pattern: string): boolean {
   const regex = new RegExp(`^${pattern}$`);
   return regex.test(text);
@@ -72,4 +74,42 @@ export function sumAllObjectValue(data: { [key: string]: number }[]): number {
   }, 0);
 
   return result;
+}
+
+export function padNumbers(
+  numbers: number[],
+  maxLength: number,
+  fillString: string,
+): string[] {
+  return numbers.map((number) =>
+    number.toString().padStart(maxLength, fillString),
+  );
+}
+
+interface AgentLog {
+  ip: string | string[];
+  agent: string;
+  device?: string;
+}
+
+export function buildAgentLog(req: RollingTypes.Request): AgentLog {
+  const agent = uaparser(req.headers["user-agent"]);
+
+  const agentLog: AgentLog = {
+    ip:
+      req.headers["cf-connecting-ip"] ||
+      req.headers["x-forwarded-for"] ||
+      req.ip ||
+      "255.255.255.255",
+    agent: `${agent.os.name} ${agent.os.version} ${agent.browser.name} ${agent.browser.version}`,
+  };
+
+  const {
+    device: { vendor, model, type },
+  } = agent;
+  if (vendor) {
+    agentLog.device = `${vendor} ${model} ${type}`;
+  }
+
+  return agentLog;
 }

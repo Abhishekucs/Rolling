@@ -1,6 +1,11 @@
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import FirebaseAdmin from "../init/firebase-admin";
 import { LRUCache } from "lru-cache";
+import {
+  recordTokenCacheAccess,
+  setTokenCacheLength,
+  setTokenCacheSize,
+} from "./metrics";
 
 const tokenCache = new LRUCache<string, DecodedIdToken>({
   max: 20000,
@@ -19,19 +24,22 @@ export async function verifyIdToken(
     return await FirebaseAdmin().auth().verifyIdToken(idToken, true);
   }
 
+  setTokenCacheLength(tokenCache.size);
+  setTokenCacheSize(tokenCache.calculatedSize ?? 0);
+
   const cached = tokenCache.get(idToken);
   if (cached) {
     const expirationDate = cached.exp * 1000 - TOKEN_CACHE_BUFFER;
 
     if (expirationDate < Date.now()) {
-      //recordTokenCacheAccess("hit_expired");
+      recordTokenCacheAccess("hit_expired");
       tokenCache.delete(idToken);
     } else {
-      //recordTokenCacheAccess("hit");
+      recordTokenCacheAccess("hit");
       return cached;
     }
   } else {
-    //recordTokenCacheAccess("miss");
+    recordTokenCacheAccess("miss");
   }
 
   const decoded = await FirebaseAdmin().auth().verifyIdToken(idToken, true);

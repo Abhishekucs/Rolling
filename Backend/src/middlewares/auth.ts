@@ -1,6 +1,12 @@
 import { Handler, NextFunction, Response } from "express";
 import RollingError from "../utils/error";
 import { verifyIdToken } from "../utils/auth";
+import {
+  incrementAuth,
+  recordAuthTime,
+  recordRequestCountry,
+} from "../utils/metrics";
+import { performance } from "perf_hooks";
 
 interface RequestAuthenticationOptions {
   isPublic?: boolean;
@@ -24,8 +30,9 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
     _res: Response,
     next: NextFunction,
   ): Promise<void> => {
+    const startTime = performance.now();
     let token: RollingTypes.DecodedToken;
-
+    let authType = "None";
     const { authorization: authHeader } = req.headers;
 
     const contentType = req.headers["content-type"];
@@ -60,12 +67,33 @@ function authenticateRequest(authOptions = DEFAULT_OPTIONS): Handler {
         );
       }
 
+      incrementAuth(token.type);
+
       req.ctx = {
         ...req.ctx,
         decodedToken: token,
       };
     } catch (error) {
+      authType = authHeader?.split(" ")[0] ?? "None";
+
+      recordAuthTime(
+        authType,
+        "failure",
+        Math.round(performance.now() - startTime),
+        req,
+      );
       return next(error);
+    }
+    recordAuthTime(
+      token.type,
+      "success",
+      Math.round(performance.now() - startTime),
+      req,
+    );
+
+    const country = req.headers["cf-ipcountry"] as string;
+    if (country) {
+      recordRequestCountry(country, req as RollingTypes.Request);
     }
 
     next();

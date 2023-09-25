@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import Logger from "../utils/logger";
 import { MulterError } from "multer";
 import { incrementBadAuth } from "./rate-limit";
+import { recordClientErrorByVersion } from "../utils/metrics";
 
 async function errorHandlingMiddleware(
   error: Error,
@@ -44,9 +45,9 @@ async function errorHandlingMiddleware(
 
     await incrementBadAuth(req, res, rollingResponse.status);
 
-    // if (rollingResponse.status >= 400 && rollingResponse.status < 500) {
-    // 	recordClientErrorByVersion(req.headers["x-client-version"] as string);
-    //   }
+    if (rollingResponse.status >= 400 && rollingResponse.status < 500) {
+      recordClientErrorByVersion(req.headers["x-client-version"] as string);
+    }
 
     if (rollingResponse.status < 500) {
       delete rollingResponse.data["errorId"];
