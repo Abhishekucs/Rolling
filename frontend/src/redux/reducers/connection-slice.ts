@@ -1,5 +1,6 @@
+"use client";
+
 import { createSlice } from "@reduxjs/toolkit";
-import { setOnlineStatus } from "../actions/connection-action";
 
 interface ConnectionState {
   isOnline: boolean | null;
@@ -9,15 +10,15 @@ const initialState: ConnectionState = {
   isOnline: null,
 };
 
-const connectionSlice = createSlice({
+export const connectionSlice = createSlice({
   name: "connection",
   initialState,
-  reducers: {},
-  extraReducers: (builder) => {
-    builder.addCase(setOnlineStatus, (state, action) => {
+  reducers: {
+    setOnlineStatus(state, action) {
       state.isOnline = action.payload;
-    });
+    },
   },
 });
 
+export const { setOnlineStatus } = connectionSlice.actions;
 export default connectionSlice.reducer;

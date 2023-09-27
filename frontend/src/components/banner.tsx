@@ -1,9 +1,8 @@
 "use client";
-
-import { setOnlineStatus } from "@/redux/actions/connection-action";
 import { connectionListener } from "@/utils/connection-event";
-import { useAppDispatch, useAppSelector } from "@/utils/hooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { useEffect } from "react";
+import { setOnlineStatus } from "@/redux/reducers/connection-slice";
 
 export default function Banner(): JSX.Element {
   const isOnline = useAppSelector((state) => state.connection.isOnline);

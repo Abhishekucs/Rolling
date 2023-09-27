@@ -3,20 +3,28 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Causten-Medium";
-  src: url("../../public/fonts/Causten-Medium.otf");
-}
-@font-face {
-  font-family: "Causten-Bold";
-  src: url("../../public/fonts/Causten-Bold.otf");
-}
-@font-face {
-  font-family: "Causten-Semibold";
-  src: url("../../public/fonts/Causten-SemiBold.otf");
-}
-@font-face {
-  font-family: "Causten-Regular";
+  font-family: "Causten";
   src: url("../../public/fonts/Causten-Regular.otf");
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Causten";
+  src: url("../../public/fonts/Causten-Medium.otf");
+  font-weight: 200;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Causten";
+  src: url("../../public/fonts/Causten-SemiBold.otf");
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Causten";
+  src: url("../../public/fonts/Causten-Bold.otf");
+  font-weight: 400;
+  font-style: normal;
 }
 
 :root {
@@ -34,5 +42,11 @@
 
 body {
   color: rgb(var(--rolling-brown-500));
-  box-sizing: border-box;
+}
+
+/* links and text */
+
+*,
+a {
+  @apply box-border;
 }

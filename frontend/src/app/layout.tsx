@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { Metadata } from "next";
-import { Providers } from "@/components/provider";
+import { ReduxProvider } from "@/components/provider";
 import Banner from "@/components/banner";
 
 export const metadata: Metadata = {
@@ -15,10 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>
+        <ReduxProvider>
           <Banner />
           {children}
-        </Providers>
+        </ReduxProvider>
       </body>
     </html>
   );
