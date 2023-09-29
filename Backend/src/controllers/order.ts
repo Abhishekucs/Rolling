@@ -20,6 +20,7 @@ export async function createOrder(
       receipt: "order_rcptid_01", // TODO: look for a system for reciept generation
     };
     const orderRes = await razorpayInstance.orders.create(razorpayOrder);
+
     const order: RollingTypes.Order = {
       razorpayOrderId: orderRes.id,
       amount: parseInt(orderRes.amount as string, 10), //smallest currency unit (paisa)
@@ -42,7 +43,7 @@ export async function createOrder(
     };
     await OrderDAL.createOrder(order);
     return new RollingResponse("order created", {
-      orderId: order.razorpayOrderId,
+      razorpayOrderId: order.razorpayOrderId,
     });
   } catch (error) {
     console.log(error);

@@ -28,4 +28,31 @@ declare namespace RollingTypes {
   }
 
   type HttpMethodTypes = keyof HttpClient;
+
+  type ProductVariantItemSize = { [key: string]: number };
+
+  interface ProductVariantItem {
+    _id: string;
+    color: string;
+    size: ProductVariantItemSize[];
+    price: number;
+  }
+
+  interface ProductItem {
+    _id: string;
+    category: string;
+    name: string;
+    description: string[];
+    variants: ProductVariantItem[];
+  }
+
+  type ProductQueryFilter = "expensive" | "new" | "cheap" | "old" | "instock";
+
+  interface ProductQuery {
+    category?: string;
+    color?: string;
+    filter?: ProductQueryFilter;
+    skip?: number;
+    limit?: number;
+  }
 }

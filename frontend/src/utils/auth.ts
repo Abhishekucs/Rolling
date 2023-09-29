@@ -2,7 +2,6 @@
 
 import { Auth } from "@/init/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { getInternetStatus } from "./connection-event";
 import Rolling from "@/init/api";
 
 interface SignupData {
@@ -31,11 +30,6 @@ export async function sendVerificationEmail(): Promise<void> {
 export async function signUp(data: SignupData): Promise<void> {
   if (Auth === undefined) {
     console.error("Authentication Uninitialized");
-    return;
-  }
-
-  if (!getInternetStatus()) {
-    console.error("You are offline, Please connect to Internet");
     return;
   }
 

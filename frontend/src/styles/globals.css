@@ -44,9 +44,27 @@ body {
   color: rgb(var(--rolling-brown-500));
 }
 
+* {
+  margin: 0;
+  padding: 0;
+}
+
 /* links and text */
 
 *,
 a {
   @apply box-border;
+}
+
+.header-nav {
+  @apply hidden md:block text-sm lg:text-base ml-[8px] uppercase tracking-widest text-brown-300 relative after:bg-brown-300 after:absolute after:h-px after:w-0 after:bottom-0 after:left-0 hover:after:w-full after:transition-all after:duration-300;
+}
+
+.circle {
+  transform: rotate(180deg);
+}
+
+.text-border-white {
+  color: #3a3328;
+  text-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
 }

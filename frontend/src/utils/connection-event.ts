@@ -1,6 +1,5 @@
-import { setOnlineStatus } from "@/redux/actions/connection-action";
+import { setOnlineStatus } from "@/redux/slices/connection-slice";
 import { Dispatch } from "@reduxjs/toolkit";
-//import store from "@/utils/store";
 
 export function connectionListener(dispatch: Dispatch): () => void {
   const handleOnlineStatusChange = (): void => {
@@ -15,15 +14,3 @@ export function connectionListener(dispatch: Dispatch): () => void {
     window.removeEventListener("offline", handleOnlineStatusChange);
   };
 }
-
-// export function getConnectionStatus(): boolean | null {
-//   return useAppSelector((state) => state.connection.isOnline);
-// }
-
-// export function getInternetStatus(): boolean {
-//   const data = store.getState().connection.isOnline;
-//   if (data == null || !data) {
-//     return false;
-//   }
-//   return true;
-// }

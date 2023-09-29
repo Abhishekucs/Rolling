@@ -7,7 +7,15 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    letterSpacing: {
+      wider: "0.05em",
+      widest: "0.25em",
+    },
     extend: {
+      lineHeight: {
+        "1": "0.5rem",
+        "2": "0.8rem",
+      },
       colors: {
         "brown-100": "#ADACA3",
         "brown-200": "#D7CDB9",
@@ -32,6 +40,14 @@ const config: Config = {
           "arial",
           "sans-serif",
         ],
+      },
+      animation: {
+        "spin-circle": "spin 700ms ease-in-out ",
+      },
+      keyframes: {
+        spin: {
+          "0%, 100%": { transform: "rotate-[360deg]" },
+        },
       },
     },
   },

@@ -1,9 +1,9 @@
-import Header from "@/components/header";
+import Hero from "@/components/hero";
 
 export default function Home(): JSX.Element {
   return (
-    <main className="bg-brown-200 w-screen h-screen">
-      <Header />
+    <main className="">
+      <Hero />
     </main>
   );
 }

@@ -1,9 +1,11 @@
 interface IconProps {
-  color: string;
+  color?: string;
+  className?: string;
 }
 
 export const Catalog = (props: IconProps): JSX.Element => (
   <svg
+    className={props.className}
     width="20"
     height="21"
     viewBox="0 0 20 21"
@@ -25,9 +27,9 @@ export const Catalog = (props: IconProps): JSX.Element => (
         width="17.668"
         height="16.6665"
         filterUnits="userSpaceOnUse"
-        color-interpolation-filters="sRGB"
+        colorInterpolationFilters="sRGB"
       >
-        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+        <feFlood floodOpacity="0" result="BackgroundImageFix" />
         <feColorMatrix
           in="SourceAlpha"
           type="matrix"
@@ -58,6 +60,7 @@ export const Catalog = (props: IconProps): JSX.Element => (
 
 export const Cart = (props: IconProps): JSX.Element => (
   <svg
+    className={props.className}
     width="20"
     height="21"
     viewBox="0 0 20 21"
@@ -79,9 +82,9 @@ export const Cart = (props: IconProps): JSX.Element => (
         width="16"
         height="16.6667"
         filterUnits="userSpaceOnUse"
-        color-interpolation-filters="sRGB"
+        colorInterpolationFilters="sRGB"
       >
-        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+        <feFlood floodOpacity="0" result="BackgroundImageFix" />
         <feColorMatrix
           in="SourceAlpha"
           type="matrix"
@@ -107,5 +110,86 @@ export const Cart = (props: IconProps): JSX.Element => (
         />
       </filter>
     </defs>
+  </svg>
+);
+
+export const RightArrow = (props: IconProps): JSX.Element => (
+  <svg
+    className={props.className}
+    width="35"
+    height="35"
+    viewBox="0 0 35 35"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      className={props.color}
+      d="M10.0155 22.0797L18.5008 13.5945L21.3292 16.4229L12.844 24.9082L10.0155 22.0797Z"
+      fill="#D7CDB9"
+    />
+    <path
+      className={props.color}
+      d="M11.418 11.5056H23.418L23.418 15.5056L11.418 15.5056L11.418 11.5056Z"
+      fill="#D7CDB9"
+    />
+    <path
+      className={props.color}
+      d="M23.4181 23.5057L23.418 11.5056L19.4181 11.5057L19.4181 23.5057H23.4181Z"
+      fill="#D7CDB9"
+    />
+  </svg>
+);
+
+export const ChevronRight = (props: IconProps): JSX.Element => (
+  <svg
+    className={props.className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      className={props.color}
+      d="M3.52344 10H15.5234V14H3.52344V10Z"
+      fill="#3A3328"
+    />
+    <path
+      className={props.color}
+      d="M11.9922 3.51465L20.4775 11.9999L17.649 14.8284L9.16376 6.34308L11.9922 3.51465Z"
+      fill="#3A3328"
+    />
+    <path
+      className={props.color}
+      d="M11.9922 20.4854L20.4775 11.9999L17.649 9.17164L9.16376 17.6569L11.9922 20.4854Z"
+      fill="#3A3328"
+    />
+  </svg>
+);
+
+export const ChevronLeft = (props: IconProps): JSX.Element => (
+  <svg
+    className={props.className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      className={props.color}
+      d="M20.4775 10H8.47747V14H20.4775V10Z"
+      fill="#3A3328"
+    />
+    <path
+      className={props.color}
+      d="M12.0087 3.51465L3.52344 11.9999L6.35186 14.8284L14.8371 6.34308L12.0087 3.51465Z"
+      fill="#3A3328"
+    />
+    <path
+      className={props.color}
+      d="M12.0087 20.4854L3.52344 11.9999L6.35186 9.17164L14.8371 17.6569L12.0087 20.4854Z"
+      fill="#3A3328"
+    />
   </svg>
 );

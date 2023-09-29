@@ -14,6 +14,7 @@ const httpClient = buildHttpClient(API_URL, 10000);
 // API Endpoints
 const Rolling = {
   users: new endpoints.Users(httpClient),
+  product: new endpoints.Product(httpClient),
 };
 
 export default Rolling;
