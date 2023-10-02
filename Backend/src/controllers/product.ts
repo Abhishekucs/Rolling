@@ -21,6 +21,10 @@ export async function getAllProducts(
     color: color as string,
   });
 
+  if (products.length === 0) {
+    throw new RollingError(404, "Product is empty");
+  }
+
   return new RollingResponse("product retrieved", products);
 }
 

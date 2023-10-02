@@ -68,8 +68,6 @@ function rollingClientMethod(
         data,
       };
     } catch (error) {
-      console.error(error);
-
       const typedError = error as Error;
       errorMessage = typedError.message;
 

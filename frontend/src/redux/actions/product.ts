@@ -3,14 +3,18 @@ import Rolling from "@/init/api";
 
 const GET_PRODUCTS = "product/getProducts";
 
-// export const getProducts =
-//   createAction<RollingTypes.ProductQuery>(GET_PRODUCTS);
-
-export const getProductList = createAsyncThunk(
+export const getProductList = createAsyncThunk<
+  RollingTypes.Product[],
+  RollingTypes.ProductQuery,
+  { rejectValue: string }
+>(
   GET_PRODUCTS,
-  async (query: RollingTypes.ProductQuery) => {
+  async (query: RollingTypes.ProductQuery, { rejectWithValue }) => {
     const response = await Rolling.product.getProducts({ ...query });
 
-    return response;
+    if (response.status !== 200) {
+      return rejectWithValue(response.message);
+    }
+    return response.data;
   },
 );

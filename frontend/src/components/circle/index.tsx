@@ -4,7 +4,7 @@ export const CircleDesign = ({ width }: { width: number }): JSX.Element => {
   return (
     <>
       <div
-        className={`absolute top-0 z-[9999999] opacity-50 ${
+        className={`absolute top-0 z-[99] opacity-50 ${
           width >= 768
             ? width >= 1024
               ? "-translate-x-[50px] -translate-y-[50px]"
@@ -18,7 +18,7 @@ export const CircleDesign = ({ width }: { width: number }): JSX.Element => {
         />
       </div>
       <div
-        className={`absolute bottom-0 right-0 circle z-[9999999] opacity-50 ${
+        className={`absolute bottom-0 right-0 circle z-[99] opacity-50 ${
           width >= 768
             ? width >= 1024
               ? "translate-x-[100px] translate-y-[100px]"

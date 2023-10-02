@@ -1,6 +1,5 @@
 import FirebaseAdmin from "../init/firebase-admin";
 import { Bucket, GetFilesResponse } from "@google-cloud/storage";
-
 import { getDownloadURL } from "firebase-admin/storage";
 
 const BASE_STORAGE_PATH = process.env.BASE_STORAGE_PATH ?? "productImage";

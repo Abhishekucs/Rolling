@@ -2,12 +2,14 @@ import { createSlice } from "@reduxjs/toolkit";
 import { getProductList } from "../actions/product";
 
 export interface ProductState {
-  product: RollingTypes.ProductItem[];
+  products: RollingTypes.Product[];
+  errorMessage: string | null | undefined;
   loading: "idle" | "pending" | "succeeded" | "failed";
 }
 
 const initialState: ProductState = {
-  product: [],
+  products: [],
+  errorMessage: null,
   loading: "idle",
 };
 
@@ -19,16 +21,17 @@ export const productSlice = createSlice({
     builder
       .addCase(getProductList.fulfilled, (state, action) => {
         state.loading = "succeeded";
-        state.product.push(action.payload.data);
+        state.products.push(...action.payload);
       })
-      .addCase(getProductList.rejected, (state) => {
+      .addCase(getProductList.rejected, (state, action) => {
         state.loading = "failed";
-      })
-      .addCase(getProductList.pending, (state) => {
-        state.loading = "pending";
+        if (action.payload) {
+          state.errorMessage = action.payload;
+        } else {
+          state.errorMessage = action.error.message;
+        }
       });
   },
 });
 
-//export const { setProduct } = productSlice.actions;
 export default productSlice.reducer;

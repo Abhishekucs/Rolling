@@ -36,14 +36,19 @@ declare namespace RollingTypes {
     color: string;
     size: ProductVariantItemSize[];
     price: number;
+    images: string[];
+    createdAt: number;
+    modifiedAt: number;
   }
 
-  interface ProductItem {
+  interface Product {
     _id: string;
     category: string;
     name: string;
     description: string[];
-    variants: ProductVariantItem[];
+    variants: ProductVariantItem;
+    createdAt: number;
+    modifiedAt: number;
   }
 
   type ProductQueryFilter = "expensive" | "new" | "cheap" | "old" | "instock";

@@ -120,8 +120,13 @@ export async function createVariation(
   productId: string,
 ): Promise<{ variantId: ObjectId }> {
   const totalColorSKU = sumAllObjectValue(sizes);
+  let signedUrl: string[] = [];
 
-  const signedUrl = await uploadFile(color, name, images);
+  try {
+    signedUrl = await uploadFile(color, name, images);
+  } catch (error) {
+    throw new RollingError(500, error);
+  }
 
   const productVariant: RollingTypes.ProductVariant = {
     _id: new ObjectId(),
