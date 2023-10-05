@@ -1,38 +1,38 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getProductList } from "../actions/product";
+import { getProductById, resetProduct } from "../actions/productById";
 
-export interface ProductState {
-  products: RollingTypes.Product[];
+export interface ProductByIdState {
+  product: RollingTypes.ProductById | null;
   errorMessage: string | null | undefined;
   loading: "idle" | "pending" | "succeeded" | "failed";
   currentRequestId: string | undefined;
 }
 
-const initialState: ProductState = {
-  products: [],
+export const initialState: ProductByIdState = {
+  product: null,
   errorMessage: null,
   loading: "idle",
   currentRequestId: undefined,
 };
 
-export const productSlice = createSlice({
-  name: "product",
+export const productByIdSlice = createSlice({
+  name: "productById",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(getProductList.fulfilled, (state, action) => {
+      .addCase(getProductById.fulfilled, (state, action) => {
         const { requestId } = action.meta;
         if (
           state.loading === "pending" &&
           state.currentRequestId === requestId
         ) {
           state.loading = "succeeded";
-          state.products.push(...action.payload);
+          state.product = action.payload;
           state.currentRequestId = undefined;
         }
       })
-      .addCase(getProductList.rejected, (state, action) => {
+      .addCase(getProductById.rejected, (state, action) => {
         const { requestId } = action.meta;
         if (
           state.loading === "pending" &&
@@ -43,13 +43,16 @@ export const productSlice = createSlice({
           state.currentRequestId = undefined;
         }
       })
-      .addCase(getProductList.pending, (state, action) => {
+      .addCase(getProductById.pending, (state, action) => {
         if (state.loading === "idle") {
           state.loading = "pending";
           state.currentRequestId = action.meta.requestId;
         }
+      })
+      .addCase(resetProduct, () => {
+        return initialState;
       });
   },
 });
 
-export default productSlice.reducer;
+export default productByIdSlice.reducer;

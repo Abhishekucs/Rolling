@@ -110,6 +110,39 @@ export async function getProductById(
   return product;
 }
 
+export async function getProductVariantById(
+  productId: string,
+  variantId: string,
+): Promise<RollingTypes.Product> {
+  try {
+    const product = await getProductCollection()
+      .aggregate([
+        {
+          $match: {
+            _id: new ObjectId(productId),
+          },
+        },
+        {
+          $unwind: "$variants",
+        },
+        {
+          $match: {
+            "variants._id": new ObjectId(variantId),
+          },
+        },
+      ])
+      .next();
+
+    if (!product) {
+      throw new RollingError(404, "Product does not exists");
+    }
+
+    return product as RollingTypes.Product;
+  } catch (error) {
+    throw new RollingError(505, error);
+  }
+}
+
 export async function createVariation(
   sizes: RollingTypes.ProductVariantSize,
   color: string,

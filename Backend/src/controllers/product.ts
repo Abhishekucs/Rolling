@@ -102,6 +102,17 @@ export async function getProductById(
   return new RollingResponse("Product recieved", product);
 }
 
+export async function getProductVariantById(
+  req: RollingTypes.Request,
+): Promise<RollingResponse> {
+  const productId = req.params["productId"];
+  const variantId = req.params["variantId"];
+
+  const product = await ProductDAL.getProductVariantById(productId, variantId);
+
+  return new RollingResponse("Product recieved", product);
+}
+
 export async function updateProduct(
   req: RollingTypes.Request,
 ): Promise<RollingResponse> {

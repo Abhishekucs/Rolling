@@ -117,6 +117,21 @@ router.get(
   asyncHandler(ProductController.getProductById),
 );
 
+router.get(
+  "/:productId/variant/:variantId",
+  authenticateRequest({
+    isPublic: true,
+  }),
+  RateLimit.productVariantGetById,
+  validateRequest({
+    params: {
+      productId: idValidation,
+      variantId: idValidation,
+    },
+  }),
+  asyncHandler(ProductController.getProductVariantById),
+);
+
 router.patch(
   "/:productId",
   authenticateRequest(),

@@ -183,8 +183,9 @@ export default function SignupForm(): JSX.Element {
       </div>
       <LongButton
         text="Create Account"
-        backgroundColor="bg-brown-500"
-        type="submit"
+        type="primary"
+        buttonType="submit"
+        width="full"
       />
     </form>
   );

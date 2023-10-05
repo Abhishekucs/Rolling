@@ -68,3 +68,12 @@ a {
   color: #3a3328;
   text-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
 }
+
+.base-layout {
+  @apply px-[22px] md:px-[44px] lg:px-[60px] xl:px-[96px];
+}
+
+.div-border-white {
+  color: #3a3328;
+  box-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
+}

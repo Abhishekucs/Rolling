@@ -1,51 +1,74 @@
-import { StaticImport } from "next/dist/shared/lib/get-img-props";
-import Image from "next/image";
+import cntl from "cntl";
 
 type ButtonType = "button" | "reset" | "submit" | undefined;
 
+const primary = cntl`
+	bg-brown-300
+	hover:opacity-80
+	active:bg-brown-500
+	text-brown-200
+`;
+const outline = cntl`
+	bg-transparent
+	border
+	border-brown-300
+	hover:bg-brown-300/10
+	active:border-brown-500
+	text-brown-500
+`;
+
+const buttonTypes = {
+  primary,
+  outline,
+};
+
+export const button = (
+  type: keyof typeof buttonTypes = "primary",
+  width = "auto",
+  className = "",
+): string => cntl`
+	relative
+	w-${width}
+	${buttonTypes[type]}
+	select-none
+	active:transition-all
+	active:duration-100
+	text-center
+	${className}
+`;
+
+interface CTAProps {
+  type?: keyof typeof buttonTypes;
+  width?: string;
+  onClick?: () => void;
+  children?: JSX.Element | string;
+  className?: string;
+  text?: string;
+  buttonType?: ButtonType;
+  childClassName?: string;
+}
+
 export default function LongButton({
-  logoSrc,
-  text,
-  backgroundColor,
-  textColor,
-  border,
-  borderColor,
-  borderWidth,
+  type = "primary",
   onClick,
-  type,
-}: {
-  logoSrc?: string | StaticImport;
-  text: string;
-  backgroundColor?: string;
-  textColor?: string;
-  border?: boolean;
-  borderColor?: string;
-  borderWidth?: string;
-  type?: ButtonType;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}): JSX.Element {
+  buttonType = "button",
+  width = "auto",
+  className = "",
+  children,
+  childClassName = "",
+  text,
+}: CTAProps): JSX.Element {
   return (
     <button
-      type={type}
+      type={buttonType}
       onClick={onClick}
-      className={`w-full flex items-center gap-x-2 justify-center py-4 rounded-xl ${
-        backgroundColor ? backgroundColor : "bg-transparent"
-      } ${border && "border"} ${
-        borderColor ? borderColor : "border-transparent"
-      } ${borderWidth ? borderWidth : "border-0"}`}
+      className={`flex items-center gap-x-2 justify-center py-4 px-10 rounded-full ${button(
+        type,
+        width,
+      )} ${className}`}
     >
-      {logoSrc && (
-        <div className="w-6 h-6">
-          <Image src={logoSrc} alt="GoogleLogo" />
-        </div>
-      )}
-      <span
-        className={`font-causten-bold text-base ${
-          textColor ? textColor : "text-white"
-        }`}
-      >
-        {text}
-      </span>
+      <div className={`${childClassName}`}>{children}</div>
+      <span className={`font-[400] text-base`}>{text}</span>
     </button>
   );
 }

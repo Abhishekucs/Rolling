@@ -6,8 +6,8 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { ProductState } from "@/redux/slices/product";
 import { useEffect } from "react";
 import { getProductList } from "@/redux/actions/product";
-import Carousel from "./carousel";
 import Loader from "../Loader";
+import DataViewer from "./data-viewer";
 
 export default function Hero(): JSX.Element {
   const { width } = useWindowDimensions();
@@ -30,10 +30,10 @@ export default function Hero(): JSX.Element {
   }, [dispatch]);
 
   return (
-    <section className=" w-screen h-screen">
+    <section className="w-screen h-screen">
       <CircleDesign width={width} />
       {loading === "succeeded" ? (
-        <Carousel products={products} />
+        <DataViewer products={products} />
       ) : loading === "failed" ? (
         <div>{errorMessage}</div>
       ) : (

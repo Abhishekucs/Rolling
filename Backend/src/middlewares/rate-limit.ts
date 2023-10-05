@@ -214,6 +214,13 @@ export const productGetById = rateLimit({
   handler: customHandler,
 });
 
+export const productVariantGetById = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 100 * REQUEST_MULTIPLIER,
+  keyGenerator: getKeyWithUid,
+  handler: customHandler,
+});
+
 export const productUpdate = rateLimit({
   windowMs: ONE_HOUR_MS,
   limit: 60 * REQUEST_MULTIPLIER,

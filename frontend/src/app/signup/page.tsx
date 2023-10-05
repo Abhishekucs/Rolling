@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import BrownHoodie from "../../../public/images/brownHoodie.jpeg";
-import GoogleLogo from "../../../public/svgs/Google.svg";
 import LongButton from "@/components/long-button";
 import Link from "next/link";
 import ChevronLeft from "../../../public/svgs/ChevronLeft.svg";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { Google } from "@/components/icons";
 
 const SignupForm = dynamic(() => import("./form"), { ssr: false });
 export default function Signup(): JSX.Element {
@@ -54,10 +54,11 @@ export default function Signup(): JSX.Element {
                 </h2>
                 <LongButton
                   text="Sign up with Google"
-                  logoSrc={GoogleLogo}
-                  backgroundColor="bg-brown-500"
                   onClick={(): void => console.log("Sign Up with Google")}
-                />
+                  width="full"
+                >
+                  <Google className="h-6 w-6" />
+                </LongButton>
                 <div className="inline-flex items-center justify-center w-full relative">
                   <hr className=" w-full h-px my-7 bg-brown-400/20 border-0 " />
                   <span className="absolute px-3 font-causten-medium text-brown-500 -translate-x-1/2 bg-brown-100 left-1/2 ">
@@ -66,10 +67,8 @@ export default function Signup(): JSX.Element {
                 </div>
                 <LongButton
                   text="Continue with email"
-                  textColor="text-brown-500"
-                  border={true}
-                  borderColor="border-brown-500/30"
-                  borderWidth="border"
+                  width="full"
+                  type="outline"
                   onClick={handleContinueWithEmail}
                 />
                 <p className="font-causten-medium text-sm text-center mt-7">

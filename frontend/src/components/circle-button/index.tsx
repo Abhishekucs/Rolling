@@ -98,7 +98,7 @@ export const CircleButton = ({
         <button
           className={`${buildButton(
             color,
-            "rounded-full hover:opacity-80 active:bg-brown-500",
+            "rounded-full hover:opacity-80 active:bg-brown-500 div-border-white",
             size,
           )} ${childClassName}`}
           onClick={handleClick}

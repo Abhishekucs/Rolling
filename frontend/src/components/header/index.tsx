@@ -6,7 +6,7 @@ import { Cart, Catalog } from "../icons";
 
 export default function Header(): JSX.Element {
   return (
-    <header className="z-[99999] fixed w-screen">
+    <header className="z-[999999] fixed w-screen">
       <div className="grid grid-cols-3 items-center mx-[22px] md:mx-[44px] lg:mx-[60px] xl:mx-[96px] py-10 grid-flow-row-dense">
         <div className="flex justify-start group">
           <Link href={"/signup"} className="flex items-center">
@@ -27,7 +27,7 @@ export default function Header(): JSX.Element {
             <span className="header-nav text-border-white ">Sign in/up</span>
           </Link>
           <Link href={"/signup"}>
-            <Cart className="" color="text-brown-300 fill-current" />
+            <Cart className="text-brown-300 fill-current h-5 w-5" />
           </Link>
         </div>
       </div>

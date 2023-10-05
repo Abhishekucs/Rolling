@@ -51,6 +51,8 @@ declare namespace RollingTypes {
     modifiedAt: number;
   }
 
+  interface ProductById extends Product {}
+
   type ProductQueryFilter = "expensive" | "new" | "cheap" | "old" | "instock";
 
   interface ProductQuery {
