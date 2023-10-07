@@ -65,7 +65,6 @@ a {
 }
 
 .text-border-white {
-  color: #3a3328;
   text-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
 }
 
@@ -74,6 +73,5 @@ a {
 }
 
 .div-border-white {
-  color: #3a3328;
   box-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
 }

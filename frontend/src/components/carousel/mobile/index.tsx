@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { PanInfo, motion, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import cntl from "cntl";
 
 interface IProductCarouselProps {
-  product: RollingTypes.ProductById;
-  className: string;
+  images: string[];
+  className?: string;
 }
 
 const DRAG_THRESHOLD = 150;
@@ -20,14 +20,11 @@ const inactive = cntl`
 	h-[5px]
 `;
 
-export default function MobileCarousel(
-  props: IProductCarouselProps,
-): JSX.Element {
+const MobileCarousel = memo((props: IProductCarouselProps): JSX.Element => {
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const canScrollPrev = currentIndex > 0;
-  const canScrollNext =
-    currentIndex < props.product?.variants.images.length - 1;
+  const canScrollNext = currentIndex < props.images.length - 1;
 
   const offsetX = useMotionValue(0);
   const animatedX = useSpring(offsetX, {
@@ -105,7 +102,7 @@ export default function MobileCarousel(
   }
 
   const cicleIndicators = Array.from(
-    { length: props.product.variants.images.length },
+    { length: props.images.length },
     (_, index) => (
       <motion.div
         key={index}
@@ -121,10 +118,10 @@ export default function MobileCarousel(
     ),
   );
   return (
-    <div className={`w-full h-full relative ${props.className}`}>
+    <div className={`w-full h-[550px] relative ${props.className}`}>
       <div className={`w-full h-full relative overflow-hidden`}>
         <div className="flex w-full h-full">
-          {props.product?.variants.images.map((image, index) => {
+          {props.images.map((image, index) => {
             return (
               <motion.div
                 key={index}
@@ -134,10 +131,7 @@ export default function MobileCarousel(
                 }}
                 drag="x"
                 dragConstraints={{
-                  left: -(
-                    FALLBACK_WIDTH *
-                    (props.product.variants.images.length - 1)
-                  ),
+                  left: -(FALLBACK_WIDTH * (props.images.length - 1)),
                   right: FALLBACK_WIDTH,
                 }}
                 onDragEnd={handleDragSnap}
@@ -154,7 +148,7 @@ export default function MobileCarousel(
                 >
                   <Image
                     src={image}
-                    alt={`${props.product?.name}`}
+                    alt={`${index}`}
                     fill
                     sizes="100vw"
                     style={{
@@ -176,4 +170,7 @@ export default function MobileCarousel(
       </div>
     </div>
   );
-}
+});
+
+MobileCarousel.displayName = "MobileCarousel";
+export default MobileCarousel;

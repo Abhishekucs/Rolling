@@ -23,7 +23,11 @@ export default class Users {
     return await this.httpClient.post(`${BASE_PATH}/signup`, { payload });
   }
 
-  async verificationEmail(): RollingTypes.EndpointResponse {
+  async sendVerificationEmail(): RollingTypes.EndpointResponse {
     return await this.httpClient.get(`${BASE_PATH}/verificationEmail`);
+  }
+
+  async deleteUser(): RollingTypes.EndpointResponse {
+    return await this.httpClient.delete(BASE_PATH);
   }
 }

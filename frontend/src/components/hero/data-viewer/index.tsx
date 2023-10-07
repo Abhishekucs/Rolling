@@ -1,7 +1,7 @@
-import { ProductInfo } from "@/components/product-info";
+import ProductInfo from "@/components/product-info";
 import { useWindowDimensions } from "@/hooks/use-window-dimensions";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { HeroFooter, MobileHeroFooter } from "../footer";
 import DesktopCarousel from "@/components/carousel/desktop";
 
@@ -10,6 +10,7 @@ export default function DataViewer({
 }: {
   products: RollingTypes.Product[];
 }): JSX.Element {
+  console.log("rerender");
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
@@ -24,31 +25,31 @@ export default function DataViewer({
     return () => clearInterval(interval);
   }, [currentIndex, products.length]);
 
-  const handlePrev = (): void => {
+  const handlePrev = useCallback((): void => {
     // Slide to the previous item
     setCurrentIndex(
       (prevIndex) => (prevIndex - 1 + products.length) % products.length,
     );
-  };
+  }, [products]);
 
-  const handleNext = (): void => {
+  const handleNext = useCallback((): void => {
     // Slide to the next product
     setCurrentIndex((prevIndex) => (prevIndex + 1) % products.length);
-  };
+  }, [products]);
 
   const handleButtonClick = (id: string, variantId: string): void => {
     // push to the product/[id] route
     router.push(`/catalog/product/${id}?variantId=${variantId}`);
   };
 
-  const imagesData = products.map((product) => {
-    const firstImage = product.variants.images[0];
-    const productName = product.name;
-    return {
-      image: firstImage,
-      name: productName,
-    };
-  });
+  const imagesData = useMemo(
+    () =>
+      products.map((product) => {
+        const firstImage = product.variants.images[0];
+        return firstImage;
+      }),
+    [products],
+  );
 
   return (
     <>

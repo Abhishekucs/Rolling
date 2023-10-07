@@ -7,21 +7,15 @@ const GET_PRODUCTS_BY_ID = "product/getProductById";
 
 export const getProductById = createAsyncThunk<
   RollingTypes.ProductById,
-  {
-    productId: string;
-    variantId: string;
-  },
+  string,
   {
     rejectValue: string;
     state: { productById: { loading: string; currentRequestId: string } };
   }
 >(
   GET_PRODUCTS_BY_ID,
-  async (
-    { productId, variantId },
-    { rejectWithValue, getState, requestId },
-  ) => {
-    const response = await Rolling.product.getProductById(productId, variantId);
+  async (productId: string, { rejectWithValue, getState, requestId }) => {
+    const response = await Rolling.product.getProductById(productId);
     const { loading, currentRequestId } = getState().productById;
 
     if (loading !== "pending" || requestId !== currentRequestId) {

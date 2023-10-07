@@ -23,7 +23,7 @@ export default function Hero(): JSX.Element {
         category: undefined,
         color: undefined,
         skip: 0,
-        limit: 3,
+        limit: 4,
         filter: undefined,
       }),
     );

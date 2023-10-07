@@ -14,12 +14,7 @@ export default class Product {
     return await this.httpClient.get(BASE_PATH, { searchQuery });
   }
 
-  async getProductById(
-    productId: string,
-    variantId: string,
-  ): RollingTypes.EndpointResponse {
-    return await this.httpClient.get(
-      `${BASE_PATH}/${productId}/variant/${variantId}`,
-    );
+  async getProductById(productId: string): RollingTypes.EndpointResponse {
+    return await this.httpClient.get(`${BASE_PATH}/${productId}`);
   }
 }

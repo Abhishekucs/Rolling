@@ -62,7 +62,7 @@ export default function LongButton({
     <button
       type={buttonType}
       onClick={onClick}
-      className={`flex items-center gap-x-2 justify-center py-4 px-10 rounded-full ${button(
+      className={`flex items-center gap-x-2 justify-center py-4 px-10 rounded-full div-border-white ${button(
         type,
         width,
       )} ${className}`}

@@ -9,7 +9,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Google } from "@/components/icons";
 
-const SignupForm = dynamic(() => import("./form"), { ssr: false });
+const SignupForm = dynamic(async () => import("./form"), { ssr: false });
 export default function Signup(): JSX.Element {
   const [withEmail, setWithEmail] = useState(false);
 

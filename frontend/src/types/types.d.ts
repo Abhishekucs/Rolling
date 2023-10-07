@@ -34,7 +34,7 @@ declare namespace RollingTypes {
   interface ProductVariantItem {
     _id: string;
     color: string;
-    size: ProductVariantItemSize[];
+    sizes: ProductVariantItemSize[];
     price: number;
     images: string[];
     createdAt: number;
@@ -51,7 +51,9 @@ declare namespace RollingTypes {
     modifiedAt: number;
   }
 
-  interface ProductById extends Product {}
+  interface ProductById extends Product {
+    variants: ProductVariantItem[];
+  }
 
   type ProductQueryFilter = "expensive" | "new" | "cheap" | "old" | "instock";
 
@@ -61,5 +63,11 @@ declare namespace RollingTypes {
     filter?: ProductQueryFilter;
     skip?: number;
     limit?: number;
+  }
+
+  interface User {
+    name: string;
+    email: string;
+    uid: string;
   }
 }

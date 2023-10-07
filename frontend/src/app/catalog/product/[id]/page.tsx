@@ -1,19 +1,19 @@
 "use client";
 
-import MobileCarousel from "@/components/carousel/mobile";
-import DesktopDataViewer from "@/components/data-viewer/desktop/page";
+import MobileDataViewer from "@/components/data-viewer/Mobile";
+import DesktopDataViewer from "@/components/data-viewer/desktop";
 import { useWindowDimensions } from "@/hooks/use-window-dimensions";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { getProductById, resetProduct } from "@/redux/actions/productById";
 import { ProductByIdState } from "@/redux/slices/productById";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 
 interface ProductProps {
   params: { id: string };
 }
 
-export default function Product({ params }: ProductProps): JSX.Element {
+const Product = memo(({ params }: ProductProps): JSX.Element => {
   console.log("render");
   const { width } = useWindowDimensions();
   const dispatch = useAppDispatch();
@@ -24,32 +24,35 @@ export default function Product({ params }: ProductProps): JSX.Element {
   const variantId = searchParams.get("variantId");
 
   useEffect(() => {
-    dispatch(getProductById({ productId: params.id, variantId: variantId }));
+    dispatch(getProductById(params.id));
 
     // Reset product back to initialState
     return () => {
       dispatch(resetProduct());
     };
-  }, [dispatch, params.id, variantId]);
+  }, [dispatch, params.id]);
 
   return (
     <>
       {/* There is two section one for the view less than 1024 and another of greater than or equal to 1024 */}
       {loading === "succeeded" ? (
         width > 1024 ? (
-          <DesktopDataViewer product={product as RollingTypes.ProductById} />
+          <DesktopDataViewer
+            product={product as RollingTypes.ProductById}
+            variantId={variantId as string}
+          />
         ) : (
-          <section className="flex flex-col items-start w-full h-full">
-            <MobileCarousel
-              product={product as RollingTypes.ProductById}
-              className="basis-3/4"
-            />
-            <div className="flex-1">product info</div>
-          </section>
+          <MobileDataViewer
+            product={product as RollingTypes.ProductById}
+            variantId={variantId as string}
+          />
         )
       ) : (
         <div>Loading...</div>
       )}
     </>
   );
-}
+});
+
+Product.displayName = "Product";
+export default Product;
