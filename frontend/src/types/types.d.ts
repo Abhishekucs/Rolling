@@ -61,6 +61,9 @@ declare namespace RollingTypes {
     category?: string;
     color?: string;
     filter?: ProductQueryFilter;
+  }
+
+  interface ProductQueryWithPagination extends ProductQuery {
     skip?: number;
     limit?: number;
   }

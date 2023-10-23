@@ -1,17 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getProductList } from "../actions/product";
+import { getProductList, resetProduct } from "../actions/product";
 
 export interface ProductState {
   products: RollingTypes.Product[];
-  errorMessage: string | null | undefined;
   loading: "idle" | "pending" | "succeeded" | "failed";
+  errorMessage: string | null | undefined;
   currentRequestId: string | undefined;
 }
 
 const initialState: ProductState = {
   products: [],
-  errorMessage: null,
   loading: "idle",
+  errorMessage: null,
   currentRequestId: undefined,
 };
 
@@ -28,7 +28,9 @@ export const productSlice = createSlice({
           state.currentRequestId === requestId
         ) {
           state.loading = "succeeded";
-          state.products.push(...action.payload);
+          if (Array.isArray(action.payload)) {
+            state.products.push(...action.payload);
+          }
           state.currentRequestId = undefined;
         }
       })
@@ -39,7 +41,11 @@ export const productSlice = createSlice({
           state.currentRequestId === requestId
         ) {
           state.loading = "failed";
-          state.errorMessage = action.error.message;
+          if (action.payload) {
+            state.errorMessage = action.payload;
+          } else {
+            state.errorMessage = action.error.message;
+          }
           state.currentRequestId = undefined;
         }
       })
@@ -48,6 +54,9 @@ export const productSlice = createSlice({
           state.loading = "pending";
           state.currentRequestId = action.meta.requestId;
         }
+      })
+      .addCase(resetProduct, () => {
+        return initialState;
       });
   },
 });

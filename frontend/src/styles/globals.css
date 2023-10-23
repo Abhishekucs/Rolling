@@ -57,7 +57,7 @@ a {
 }
 
 .header-nav {
-  @apply hidden md:block text-sm lg:text-base ml-[8px] uppercase tracking-widest text-brown-300 relative after:bg-brown-300 after:absolute after:h-px after:w-0 after:bottom-0 after:left-0 hover:after:w-full after:transition-all after:duration-300;
+  @apply hidden md:block text-sm lg:text-base ml-[8px] uppercase tracking-widest relative  after:absolute after:h-px after:w-0 after:bottom-0 after:left-0 hover:after:w-full after:transition-all after:duration-300;
 }
 
 .circle {
@@ -74,4 +74,20 @@ a {
 
 .div-border-white {
   box-shadow: 0 1px hsla(0, 0%, 100%, 0.5);
+}
+
+.text-shadow {
+  text-shadow:
+    1px 1px 0 rgba(var(--rolling-brown-200-50)),
+    -1px -1px 0 rgba(var(--rolling-brown-200-50)),
+    1px -1px 0 rgba(var(--rolling-brown-200-50)),
+    -1px 1px rgba(var(--rolling-brown-200-50));
+}
+
+.text-shadow-none {
+  text-shadow: none;
+}
+
+:invalid {
+  color: rgba(156, 163, 175, 1);
 }

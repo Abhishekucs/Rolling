@@ -4,10 +4,9 @@ import Image from "next/image";
 import BrownHoodie from "../../../public/images/brownHoodie.jpeg";
 import LongButton from "@/components/long-button";
 import Link from "next/link";
-import ChevronLeft from "../../../public/svgs/ChevronLeft.svg";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Google } from "@/components/icons";
+import { ChevronLeft, Google } from "@/components/icons";
 
 const SignupForm = dynamic(async () => import("./form"), { ssr: false });
 export default function Signup(): JSX.Element {
@@ -34,15 +33,7 @@ export default function Signup(): JSX.Element {
           >
             <button onClick={handleBackToEmail}>
               {" "}
-              <Image
-                className="h-5"
-                src={ChevronLeft}
-                alt="chevronLeft"
-                style={{
-                  height: "auto",
-                  width: "auto",
-                }}
-              />{" "}
+              <ChevronLeft />
             </button>
           </div>
           <div className="max-w-sm mx-auto flex flex-col flex-grow justify-center">

@@ -3,46 +3,131 @@ import Link from "next/link";
 import Logo from "../logo";
 import { Cart, Catalog } from "../icons";
 import { useAppSelector } from "@/hooks/useStore";
-import { memo } from "react";
-
-/* TODO: Add color props to change the color of icon when scrolling */
+import { memo, useEffect, useState } from "react";
+import { motion, useTransform, useScroll } from "framer-motion";
+import cntl from "cntl";
+import { usePathname } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { resetProduct } from "@/redux/actions/product";
 
 const Header = memo((): JSX.Element => {
   const { user } = useAppSelector((state) => state.Auth);
-  console.log(user);
+  const pathname = usePathname();
+  const { scrollY } = useScroll();
+  const [currentPosY, setCurrentPosY] = useState(0);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const unsubscribe = scrollY.on("change", (val) => {
+      setCurrentPosY(val);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [scrollY]);
+
+  const backgroundColor = useTransform(
+    scrollY,
+    [0, 80],
+    ["rgba(28,26,23,0.0)", "rgba(28,26,23,.8)"],
+  );
+  const height = useTransform(scrollY, [0, 80], ["100px", "50px"]);
+  const textColor = useTransform(
+    scrollY,
+    [0, 80],
+    [`${pathname === "/catalog" ? "#D7CDB9" : "#3A3328"}`, "#D7CDB9"],
+  );
+
+  const underlineCondition = cntl`
+  ${currentPosY < 80 ? "after:bg-brown-300" : "after:bg-brown-200"}
+  `;
+
   return (
-    <header className="z-[999999] fixed w-screen">
-      <div className="grid grid-cols-3 items-center mx-[22px] md:mx-[44px] lg:mx-[60px] xl:mx-[96px] py-10 grid-flow-row-dense">
-        <div className="flex justify-start group">
-          <Link href={"/catalog"} className="flex items-center">
+    <motion.header
+      className={`z-[999999] fixed w-screen h-[100px]  ${
+        currentPosY < 80 ? "backdrop-blur-none" : "backdrop-blur-sm"
+      }`}
+      style={{
+        backgroundColor,
+        height,
+      }}
+      transition={{
+        ease: [0.5, 1, 0.89, 1],
+        type: "spring",
+        stiffness: 1000,
+        duration: 0.3,
+      }}
+    >
+      <div className="flex items-center base-layout h-full ">
+        <div className="flex justify-start basis-1/3">
+          <Link
+            href={"/catalog"}
+            onClick={(): { payload: undefined; type: "product/resetProduct" } =>
+              dispatch(resetProduct())
+            }
+            className="flex items-center group"
+          >
             <Catalog
-              className="md:group-hover:animate-spin-circle md:mr-2"
-              color="text-brown-300 fill-current"
+              className="md:group-hover:animate-spin-circle md:mr-2 fill-current"
+              style={{
+                color: textColor,
+              }}
             />
-            <span className="header-nav text-border-white">Catalog</span>
+            <motion.span
+              className={`header-nav ${underlineCondition}`}
+              style={{
+                color: textColor,
+              }}
+            >
+              Catalog
+            </motion.span>
           </Link>
         </div>
-        <div className="flex justify-center">
-          <Link href={"/"}>
-            <Logo className="w-[15vh]" color="text-brown-300 fill-current" />
+        <div className="flex justify-center basis-1/3">
+          <Link
+            href={"/"}
+            onClick={(): { payload: undefined; type: "product/resetProduct" } =>
+              dispatch(resetProduct())
+            }
+          >
+            <Logo
+              className="w-[15vh]"
+              style={{
+                color: textColor,
+              }}
+            />
           </Link>
         </div>
-        <div className="flex justify-end items-center">
+        <div className="flex justify-end items-center basis-1/3">
           {user ? (
             <Link href={"/profile"} className="md:mr-20 lg:mr-24 xl:mr-28">
-              <span className="header-nav text-border-white ">Profile</span>
+              <motion.span
+                className={`header-nav ${underlineCondition}`}
+                style={{ color: textColor }}
+              >
+                Profile
+              </motion.span>
             </Link>
           ) : (
             <Link href={"/signup"} className="md:mr-20 lg:mr-24 xl:mr-28">
-              <span className="header-nav text-border-white ">Sign in/up</span>
+              <motion.span
+                className={`header-nav ${underlineCondition}`}
+                style={{ color: textColor }}
+              >
+                Sign in/up
+              </motion.span>
             </Link>
           )}
           <Link href={"/cart"}>
-            <Cart className="text-brown-300 fill-current h-5 w-5" />
+            <Cart
+              className=" fill-current h-5 w-5"
+              style={{ color: textColor }}
+            />
           </Link>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 });
 

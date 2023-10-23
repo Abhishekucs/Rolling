@@ -30,7 +30,7 @@ export default function SignupForm(): JSX.Element {
 
   const { errors } = formState;
   const dispatch = useAppDispatch();
-  const { loading, errorMessage, user } = useAppSelector((state) => state.Auth);
+  const { loading, user } = useAppSelector((state) => state.Auth);
   const router = useRouter();
 
   async function onSubmit(data: FormValues): Promise<void> {
@@ -47,7 +47,11 @@ export default function SignupForm(): JSX.Element {
     if (user) {
       router.replace("/");
     }
-  }, [user, router]);
+
+    if (loading === "failed") {
+      router.replace("/");
+    }
+  }, [user, router, loading, dispatch]);
 
   return (
     <>
@@ -204,8 +208,6 @@ export default function SignupForm(): JSX.Element {
             width="full"
           />
         </form>
-      ) : loading === "failed" ? (
-        <div>{errorMessage}</div>
       ) : (
         <div>Loading...</div>
       )}

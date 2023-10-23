@@ -4,6 +4,8 @@ import { ReduxProvider } from "@/components/provider";
 import Banner from "@/components/banner";
 import Header from "@/components/header";
 import AuthProvider from "@/components/AuthProvider";
+import { Footer } from "@/components/footer";
+import ToastProvider from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Rolling | Luxury Streetwear Brand",
@@ -18,11 +20,14 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ReduxProvider>
-          <AuthProvider>
-            <Banner />
-            <Header />
-            {children}
-          </AuthProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <Banner />
+              <Header />
+              {children}
+              <Footer />
+            </AuthProvider>
+          </ToastProvider>
         </ReduxProvider>
       </body>
     </html>

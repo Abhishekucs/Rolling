@@ -3,11 +3,11 @@ import { Auth } from "@/init/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import Rolling from "@/init/api";
 import { UserState } from "../slices/auth";
-import { FirebaseError } from "firebase/app";
+import { addToast } from "./toast";
 
 const CREATE_USER = "user/createUser";
 // const SIGN_IN = "user/signIn";
-//const SIGN_OUT = "user/signOut";
+const SIGN_OUT = "user/signOut";
 //const GET_USER = "user/getUser";
 
 export const signUp = createAsyncThunk<
@@ -16,6 +16,13 @@ export const signUp = createAsyncThunk<
   { state: UserState; rejectValue: string }
 >(CREATE_USER, async ({ name, password, email }, thunkAPI) => {
   if (Auth === undefined) {
+    thunkAPI.dispatch(
+      addToast({
+        error: true,
+        message: "auth uninitialized",
+        createdAt: Date.now(),
+      }),
+    );
     return thunkAPI.rejectWithValue("Auth is not initialized");
   }
   //TODO: check connection state here
@@ -32,19 +39,21 @@ export const signUp = createAsyncThunk<
     const signUpResponse = await Rolling.users.create(name, email, uid);
 
     if (signUpResponse.status !== 200) {
-      throw signUpResponse.data;
+      throw signUpResponse.message;
+    } else {
+      await updateProfile(createdAuthUser.user, { displayName: name });
+      await Rolling.users.sendVerificationEmail();
+
+      thunkAPI.dispatch(
+        setUser({
+          name: createdAuthUser.user.displayName as string,
+          email: createdAuthUser.user.email as string,
+          uid: createdAuthUser.user.uid as string,
+        }),
+      );
+      return;
     }
 
-    await updateProfile(createdAuthUser.user, { displayName: name });
-    await Rolling.users.sendVerificationEmail();
-
-    thunkAPI.dispatch(
-      setUser({
-        name: createdAuthUser.user.displayName as string,
-        email: createdAuthUser.user.email as string,
-        uid: createdAuthUser.user.uid as string,
-      }),
-    );
     // dispatch setCart action
   } catch (error) {
     if (createdAuthUser) {
@@ -61,14 +70,14 @@ export const signUp = createAsyncThunk<
       }
     }
 
-    //TODO: add toast for 'failed to create account" message
-    if (error instanceof FirebaseError) {
-      if (error.code === "auth/email-already-in-use") {
-        return thunkAPI.rejectWithValue("Email already in use");
-      } else {
-        return thunkAPI.rejectWithValue(error.code);
-      }
-    }
+    thunkAPI.dispatch(signOut());
+    thunkAPI.dispatch(
+      addToast({
+        error: true,
+        message: error as string,
+        createdAt: Date.now(),
+      }),
+    );
     return thunkAPI.rejectWithValue(error as string);
   }
 });
@@ -78,25 +87,66 @@ export const clearUser = createAction("user/clearUser");
 
 //export const signIn = createAsyncThunk(SIGN_IN, async () => {});
 
-//export const signOut = createAsyncThunk(SIGN_OUT, async () => {});
+export const signOut = createAsyncThunk(
+  SIGN_OUT,
+  async (_, { dispatch, rejectWithValue }) => {
+    if (Auth === undefined) {
+      dispatch(
+        addToast({
+          error: true,
+          message: "auth uninitialized",
+          createdAt: Date.now(),
+        }),
+      );
+      return rejectWithValue("Auth is not initialized");
+    }
+
+    // TODO: check connection state here
+
+    if (!Auth.currentUser) return;
+
+    try {
+      await Auth.signOut();
+      dispatch(clearUser());
+    } catch (error) {
+      dispatch(
+        addToast({
+          error: true,
+          message: error as string,
+          createdAt: Date.now(),
+        }),
+      );
+      return rejectWithValue(error);
+    }
+  },
+);
 
 export const getDataAndInit = createAsyncThunk(
   "user/getDataAndInit",
   async (_, { rejectWithValue, dispatch }) => {
     if (Auth === undefined) {
+      dispatch(
+        addToast({
+          error: true,
+          message: "auth uninitialized",
+          createdAt: Date.now(),
+        }),
+      );
       return rejectWithValue("Auth is not initialized");
     }
+    const user = Auth.currentUser;
+    if (!user) {
+      dispatch(clearUser());
+      return;
+      //TODO: fetch cart options from localstorage first and then transfer it to backend
+    }
 
-    Auth.onAuthStateChanged(async function (user) {
-      if (user) {
-        dispatch(
-          setUser({
-            name: user.displayName as string,
-            uid: user.uid,
-            email: user.email as string,
-          }),
-        );
-      }
-    });
+    dispatch(
+      setUser({
+        name: user?.displayName as string,
+        uid: user?.uid as string,
+        email: user?.email as string,
+      }),
+    );
   },
 );

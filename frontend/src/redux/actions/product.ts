@@ -1,31 +1,42 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import Rolling from "@/init/api";
+import { ProductState } from "../slices/product";
 
 const GET_PRODUCTS = "product/getProducts";
+const RESET_PRODUCT = "product/resetProduct";
+
+export const resetProduct = createAction(RESET_PRODUCT);
 
 export const getProductList = createAsyncThunk<
   RollingTypes.Product[],
-  RollingTypes.ProductQuery,
+  RollingTypes.ProductQueryWithPagination,
   {
+    state: { product: ProductState };
     rejectValue: string;
-    state: { product: { loading: string; currentRequestId: string } };
   }
 >(
   GET_PRODUCTS,
   async (
-    query: RollingTypes.ProductQuery,
-    { rejectWithValue, getState, requestId },
+    query: RollingTypes.ProductQueryWithPagination,
+    { rejectWithValue },
   ) => {
-    const response = await Rolling.product.getProducts({ ...query });
-    const { loading, currentRequestId } = getState().product;
+    // TODO: check connection status here
 
-    if (loading !== "pending" || requestId !== currentRequestId) {
-      return;
-    }
+    // const { loading, currentRequestId } = getState().product;
+    // if (loading !== "pending" || requestId !== currentRequestId) {
+    //   return;
+    // }
 
-    if (response.status !== 200) {
-      return rejectWithValue(response.message);
+    try {
+      const response = await Rolling.product.getProducts({ ...query });
+
+      if (response.status !== 200) {
+        throw response.message;
+      }
+      return response.data;
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
+    } catch (error: any) {
+      return rejectWithValue(error);
     }
-    return response.data;
   },
 );

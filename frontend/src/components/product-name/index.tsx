@@ -53,7 +53,7 @@ const ProductName = memo(
   }: IProductNameProps): JSX.Element => {
     return (
       <div className={className}>
-        {titles.map((title, index) => {
+        {titles?.map((title, index) => {
           return (
             <h1
               key={index}

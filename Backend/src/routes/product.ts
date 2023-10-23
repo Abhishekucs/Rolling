@@ -15,7 +15,7 @@ import * as RateLimit from "../middlewares/rate-limit";
 const router = Router();
 
 const BASE_PRODUCT_VALIDATION_SCHEMA = {
-  category: joi.string().valid("tshirt", "hoodie"),
+  category: joi.string().valid("t-shirt", "hoodie"),
   color: joi.string(),
   filter: joi.string().valid("expensive", "cheap", "new", "old", "instock"),
 };
