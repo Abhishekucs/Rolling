@@ -23,6 +23,7 @@ const config: Config = {
         "brown-300": "#3A3328",
         "brown-400": "#22201C",
         "brown-500": "#1C1A17",
+        "light-brown": "#928C84",
       },
       fontFamily: {
         serif: ["Causten", "Arial", "Helvetica", "sans-serif"],

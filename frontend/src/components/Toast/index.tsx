@@ -41,14 +41,18 @@ export const Toast = (props: IToast & { index: number }): JSX.Element => {
 export default function Toasts(): JSX.Element {
   const toasts = useAppSelector((state) => state.toast);
 
-  return createPortal(
-    <ul className="list-none p-0 m-0">
-      <AnimatePresence>
-        {toasts.map((toast: IToast, index: number) => (
-          <Toast key={toast.createdAt} {...toast} index={index} />
-        ))}
-      </AnimatePresence>
-    </ul>,
-    document.body,
-  );
+  if (typeof window === "object") {
+    return createPortal(
+      <ul className="list-none p-0 m-0">
+        <AnimatePresence>
+          {toasts.map((toast: IToast, index: number) => (
+            <Toast key={toast.createdAt} {...toast} index={index} />
+          ))}
+        </AnimatePresence>
+      </ul>,
+      document.body,
+    );
+  }
+
+  return <ul className="list-none p-0 m-0"></ul>;
 }

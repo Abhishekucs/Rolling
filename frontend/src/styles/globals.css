@@ -83,6 +83,13 @@ a {
     1px -1px 0 rgba(var(--rolling-brown-200-50)),
     -1px 1px rgba(var(--rolling-brown-200-50));
 }
+.text-shadow-300 {
+  text-shadow:
+    1px 1px 0 rgba(var(--rolling-brown-300-50)),
+    -1px -1px 0 rgba(var(--rolling-brown-300-50)),
+    1px -1px 0 rgba(var(--rolling-brown-300-50)),
+    -1px 1px rgba(var(--rolling-brown-300-50));
+}
 
 .text-shadow-none {
   text-shadow: none;
